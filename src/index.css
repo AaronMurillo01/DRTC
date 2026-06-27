@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: #05070a;
+  color: #c7d3df;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Tactical scanline + grid overlay backdrop */
+.cmd-grid {
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.04) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+/* Scrollbars */
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+*::-webkit-scrollbar-track {
+  background: #0a0e14;
+}
+*::-webkit-scrollbar-thumb {
+  background: #1b2430;
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #2a3a4a;
+}
+
+@layer components {
+  .panel {
+    @apply bg-cmd-panel border border-cmd-border rounded-md flex flex-col min-h-0;
+  }
+  .panel-header {
+    @apply flex items-center justify-between px-3 py-2 border-b border-cmd-border text-[11px] uppercase tracking-[0.18em] text-cmd-dim font-mono shrink-0;
+  }
+  .stat-chip {
+    @apply font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border;
+  }
+  .glow-text {
+    text-shadow: 0 0 8px currentColor;
+  }
+}
