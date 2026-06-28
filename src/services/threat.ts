@@ -41,10 +41,11 @@ const CAT_LABEL: Record<string, string> = {
   disaster: 'natural disaster',
   signals: 'media/crisis signals',
   space: 'space weather',
+  weather: 'severe weather',
 }
 
-// Persistent reference layers (orbital/infrastructure) must not drive scores.
-const NON_THREAT = new Set(['orbital', 'spaceport', 'nuclear', 'market'])
+// Reference / non-hazard layers must not drive the threat or instability scores.
+const NON_THREAT = new Set(['orbital', 'spaceport', 'nuclear', 'market', 'air'])
 
 export function computeCountryRisk(events: IntelEvent[]): CountryRisk[] {
   const located = events.filter(
@@ -122,6 +123,8 @@ export function buildBrief(
   const disasters = by('disaster')
   const space = by('space')
   const signals = by('signals')
+  const weather = by('weather')
+  const air = by('air')
 
   const parts: string[] = []
   parts.push(
@@ -139,6 +142,15 @@ export function buildBrief(
 
   if (disasters.length)
     parts.push(`${disasters.length} active natural-disaster events in the picture.`)
+
+  const bigWx = [...weather].sort((a, b) => b.severity - a.severity)[0]
+  if (bigWx)
+    parts.push(
+      `${weather.length} active weather alerts; most severe ${bigWx.title} (${bigWx.region ?? 'US'}).`,
+    )
+
+  const worstAir = [...air].sort((a, b) => b.severity - a.severity)[0]
+  if (worstAir && worstAir.severity >= 33) parts.push(`Worst air quality: ${worstAir.title}.`)
 
   const sevSpace = [...space].sort((a, b) => b.severity - a.severity)[0]
   if (sevSpace && sevSpace.severity >= 55) parts.push(`Elevated space weather: ${sevSpace.title}.`)

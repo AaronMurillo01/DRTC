@@ -15,9 +15,10 @@ backend to run. Open it and it starts streaming.
 - **One map, three views.** A 2D dark world map, a tilt-able 3D terrain map on a
   real globe projection, and a stylized globe. Switch with the header buttons or
   the keys `2`, `3`, `G`.
-- **Live tracks.** Earthquakes, natural disasters, space weather, the ISS, and
-  geopolitical signal hotspots are normalized into one event model and drawn as
-  severity scaled points with hover details and click to focus.
+- **Live tracks.** Earthquakes, natural disasters, severe weather alerts, air
+  quality, space weather, the ISS, and geopolitical signal hotspots are
+  normalized into one event model and drawn as severity scaled points with hover
+  details and click to focus.
 - **Threat picture.** A correlation engine rolls the whole event stream into a
   Global Threat Index, a five level condition (NOMINAL up to CRITICAL), and a
   rolling history sparkline.
@@ -65,6 +66,8 @@ Everything here is free and needs no key.
 | --- | --- |
 | Seismic | USGS earthquake feed |
 | Disasters | NASA EONET |
+| Weather alerts | NOAA / NWS (US) |
+| Air quality | Open-Meteo (global cities) |
 | Space weather | NOAA SWPC |
 | ISS position | wheretheiss.at |
 | Signals | GDELT |

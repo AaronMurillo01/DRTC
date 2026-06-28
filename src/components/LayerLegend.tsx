@@ -8,6 +8,8 @@ const LAYERS: EventCategory[] = [
   'signals',
   'seismic',
   'disaster',
+  'weather',
+  'air',
   'space',
   'orbital',
   'spaceport',

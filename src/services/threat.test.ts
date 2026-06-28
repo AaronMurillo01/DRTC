@@ -69,6 +69,13 @@ describe('computeCountryRisk', () => {
     expect(kp.drivers).toEqual(['baseline posture'])
   })
 
+  it('treats severe weather as a hazard but ignores air quality', () => {
+    const wx = computeThreat([ev({ severity: 95, category: 'weather' })])
+    const air = computeThreat([ev({ severity: 95, category: 'air' })])
+    expect(wx.index).toBeGreaterThan(0)
+    expect(air.index).toBe(0)
+  })
+
   it('is sorted by descending score', () => {
     const r = computeCountryRisk([])
     for (let i = 1; i < r.length; i++) expect(r[i - 1].score).toBeGreaterThanOrEqual(r[i].score)

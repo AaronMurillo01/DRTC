@@ -7,6 +7,8 @@ import { fetchOrbital } from '../services/orbital'
 import { fetchSignals } from '../services/signals'
 import { fetchMarkets } from '../services/markets'
 import { fetchNuclear, fetchSpaceports } from '../services/static'
+import { fetchAirQuality } from '../services/airquality'
+import { fetchWeather } from '../services/weather'
 import type { IntelEvent } from '../types'
 
 interface FeedSpec {
@@ -29,7 +31,9 @@ const FEEDS: FeedSpec[] = [
     },
   },
   { id: 'space', intervalMs: 120_000, run: fetchSpace },
+  { id: 'weather', intervalMs: 180_000, run: fetchWeather },
   { id: 'signals', intervalMs: 180_000, run: fetchSignals },
+  { id: 'air', intervalMs: 600_000, run: fetchAirQuality },
   { id: 'disaster', intervalMs: 300_000, run: fetchDisasters },
   // Static reference layers — load once, refresh rarely.
   { id: 'spaceport', intervalMs: 3_600_000, run: fetchSpaceports },

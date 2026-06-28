@@ -23,6 +23,8 @@ export const CATEGORY_META: Record<EventCategory, { label: string; color: string
     signals: { label: 'Signals', color: '#34d399', short: 'SIG' },
     spaceport: { label: 'Spaceports', color: '#a78bfa', short: 'SPRT' },
     nuclear: { label: 'Nuclear Sites', color: '#facc15', short: 'NUKE' },
+    air: { label: 'Air Quality', color: '#2dd4bf', short: 'AIR' },
+    weather: { label: 'Weather Alerts', color: '#38bdf8', short: 'WX' },
   }
 
 // Persistent reference layers — exempt from the time filter and the intel feed.
@@ -39,7 +41,7 @@ export const TIME_RANGES: { key: TimeRangeKey; label: string; ms: number }[] = [
 ]
 
 const ALERT_THRESHOLD = 85
-const PREFS_KEY = 'drtc.prefs.v1'
+const PREFS_KEY = 'drtc.prefs.v2'
 
 // --- preference persistence (active layers + severity floor) ---
 interface Prefs {
@@ -202,10 +204,42 @@ const INITIAL_SOURCES: FeedSource[] = [
     consecutiveFailures: 0,
     syncs: 0,
   },
+  {
+    id: 'air',
+    label: 'Air Quality',
+    category: 'air',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
+  {
+    id: 'weather',
+    label: 'Weather Alerts',
+    category: 'weather',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
 ]
 
 const prefs = loadPrefs()
-const DEFAULT_CATS: EventCategory[] = ['seismic', 'disaster', 'space', 'orbital', 'signals']
+const DEFAULT_CATS: EventCategory[] = [
+  'seismic',
+  'disaster',
+  'space',
+  'orbital',
+  'signals',
+  'weather',
+  'air',
+]
 
 export const useStore = create<DRTCState>((set) => ({
   events: [],

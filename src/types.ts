@@ -10,6 +10,8 @@ export type EventCategory =
   | 'signals'
   | 'spaceport'
   | 'nuclear'
+  | 'air'
+  | 'weather'
 
 export type ViewMode = '2d' | '3d' | 'globe'
 
