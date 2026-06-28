@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import maplibregl, { type GeoJSONSource, type StyleSpecification } from 'maplibre-gl'
 import { forward as mgrsForward } from 'mgrs'
+import { Flame, Moon, Orbit, Satellite } from 'lucide-react'
 import { CATEGORY_META, useStore, visibleEvents } from '../store'
 import type { CountryRisk, IntelEvent, ViewMode } from '../types'
 
@@ -26,6 +27,14 @@ const STYLE: StyleSpecification = {
       tileSize: 256,
       attribution: '© OpenStreetMap © CARTO',
     },
+    satellite: {
+      type: 'raster',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      ],
+      tileSize: 256,
+      attribution: 'Imagery © Esri',
+    },
     dem: {
       type: 'raster-dem',
       tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
@@ -38,7 +47,42 @@ const STYLE: StyleSpecification = {
   layers: [
     { id: 'bg', type: 'background', paint: { 'background-color': '#05070a' } },
     { id: 'carto', type: 'raster', source: 'carto', paint: { 'raster-opacity': 0.88 } },
+    {
+      id: 'satellite',
+      type: 'raster',
+      source: 'satellite',
+      layout: { visibility: 'none' },
+    },
   ],
+}
+
+// --- Solar terminator (day/night shading) --------------------------------
+function subsolar(d: Date): { lat: number; lng: number } {
+  const dayMs = Date.UTC(d.getUTCFullYear(), 0, 0)
+  const dayOfYear = (d.getTime() - dayMs) / 86_400_000
+  const decl = -23.44 * Math.cos(D2R * (360 / 365) * (dayOfYear + 10))
+  const utcHours = d.getUTCHours() + d.getUTCMinutes() / 60 + d.getUTCSeconds() / 3600
+  return { lat: decl, lng: -15 * (utcHours - 12) }
+}
+
+// Polygon covering the night hemisphere at time `d`.
+function terminatorFC(d: Date): GeoJSON.FeatureCollection {
+  const sun = subsolar(d)
+  const decl = Math.abs(sun.lat) < 0.5 ? (sun.lat < 0 ? -0.5 : 0.5) : sun.lat
+  const ring: number[][] = []
+  for (let lng = -180; lng <= 180; lng += 2) {
+    const ha = (lng - sun.lng) * D2R
+    const lat = Math.atan(-Math.cos(ha) / Math.tan(decl * D2R)) * R2D
+    ring.push([lng, lat])
+  }
+  const darkPole = decl > 0 ? -90 : 90
+  ring.push([180, darkPole], [-180, darkPole], ring[0])
+  return {
+    type: 'FeatureCollection',
+    features: [
+      { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {} },
+    ],
+  }
 }
 
 // Apply 2D (flat mercator) vs 3D (globe projection + terrain + tilt).
@@ -149,7 +193,13 @@ export default function MapView() {
   const popupRef = useRef<maplibregl.Popup | null>(null)
   const readyRef = useRef(false)
   const lastMoveRef = useRef(0)
+  const orbitRef = useRef<number | null>(null)
+  const draggingRef = useRef(false)
   const [coord, setCoord] = useState<Coord | null>(null)
+  const [satellite, setSatellite] = useState(false)
+  const [heatmap, setHeatmap] = useState(false)
+  const [night, setNight] = useState(false)
+  const [orbit, setOrbit] = useState(false)
 
   const events = useStore(visibleEvents)
   const risk = useStore((s) => s.countryRisk)
@@ -188,6 +238,16 @@ export default function MapView() {
       map.addSource('risk', { type: 'geojson', data: riskFC([]) })
       map.addSource('arcs', { type: 'geojson', data: arcsFC([], []) })
       map.addSource('events', { type: 'geojson', data: eventsFC([]) })
+      map.addSource('terminator', { type: 'geojson', data: terminatorFC(new Date()) })
+
+      // Day/night terminator shading (hidden until toggled).
+      map.addLayer({
+        id: 'terminator-fill',
+        type: 'fill',
+        source: 'terminator',
+        layout: { visibility: 'none' },
+        paint: { 'fill-color': '#02040a', 'fill-opacity': 0.42 },
+      })
 
       map.addLayer({
         id: 'risk-zone',
@@ -223,6 +283,35 @@ export default function MapView() {
           'line-width': 1.2,
           'line-opacity': 0.55,
           'line-blur': 0.3,
+        },
+      })
+
+      // Intel-density heatmap (hidden until toggled).
+      map.addLayer({
+        id: 'events-heat',
+        type: 'heatmap',
+        source: 'events',
+        layout: { visibility: 'none' },
+        paint: {
+          'heatmap-weight': ['interpolate', ['linear'], ['get', 'sev'], 0, 0.1, 100, 1],
+          'heatmap-intensity': 1.1,
+          'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 14, 6, 40],
+          'heatmap-opacity': 0.75,
+          'heatmap-color': [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0,
+            'rgba(0,0,0,0)',
+            0.3,
+            '#0d3b66',
+            0.5,
+            '#22d3ee',
+            0.7,
+            '#fbbf24',
+            1,
+            '#f87171',
+          ],
         },
       })
 
@@ -312,6 +401,10 @@ export default function MapView() {
         setCoord({ lat, lng, mgrs })
       })
       map.on('mouseout', () => setCoord(null))
+
+      // Pause auto-orbit while the operator is interacting.
+      map.on('dragstart', () => (draggingRef.current = true))
+      map.on('dragend', () => (draggingRef.current = false))
     })
 
     const ro = new ResizeObserver(() => map.resize())
@@ -349,6 +442,58 @@ export default function MapView() {
     applyView(map, viewMode)
   }, [viewMode])
 
+  // Basemap: dark vector vs. satellite imagery.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !readyRef.current) return
+    map.setLayoutProperty('satellite', 'visibility', satellite ? 'visible' : 'none')
+    map.setLayoutProperty('carto', 'visibility', satellite ? 'none' : 'visible')
+  }, [satellite])
+
+  // Heatmap toggle (dims point glow while active to reduce clutter).
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !readyRef.current) return
+    map.setLayoutProperty('events-heat', 'visibility', heatmap ? 'visible' : 'none')
+    map.setLayoutProperty('events-glow', 'visibility', heatmap ? 'none' : 'visible')
+  }, [heatmap])
+
+  // Day/night terminator overlay + minute refresh while active.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !readyRef.current) return
+    map.setLayoutProperty('terminator-fill', 'visibility', night ? 'visible' : 'none')
+    if (!night) return
+    const refresh = () =>
+      (map.getSource('terminator') as GeoJSONSource)?.setData(terminatorFC(new Date()))
+    refresh()
+    const t = window.setInterval(refresh, 60_000)
+    return () => window.clearInterval(t)
+  }, [night])
+
+  // Auto-orbit: slowly spin the earth when idle.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    if (!orbit) {
+      if (orbitRef.current) cancelAnimationFrame(orbitRef.current)
+      orbitRef.current = null
+      return
+    }
+    const step = () => {
+      if (map && !draggingRef.current) {
+        const c = map.getCenter()
+        map.setCenter([c.lng + 0.12, c.lat])
+      }
+      orbitRef.current = requestAnimationFrame(step)
+    }
+    orbitRef.current = requestAnimationFrame(step)
+    return () => {
+      if (orbitRef.current) cancelAnimationFrame(orbitRef.current)
+      orbitRef.current = null
+    }
+  }, [orbit])
+
   // Selected highlight + fly-to.
   useEffect(() => {
     const map = mapRef.current
@@ -360,9 +505,37 @@ export default function MapView() {
     }
   }, [selectedId, events])
 
+  const tools = [
+    { on: satellite, set: () => setSatellite((v) => !v), icon: Satellite, label: 'SAT' },
+    { on: heatmap, set: () => setHeatmap((v) => !v), icon: Flame, label: 'HEAT' },
+    { on: night, set: () => setNight((v) => !v), icon: Moon, label: 'DAY/NIGHT' },
+    { on: orbit, set: () => setOrbit((v) => !v), icon: Orbit, label: 'ORBIT' },
+  ]
+
   return (
     <>
       <div ref={containerRef} className="absolute inset-0" />
+
+      {/* Map toolbar — vertical strip on the right edge */}
+      <div className="absolute top-1/2 right-2 -translate-y-1/2 z-10 flex flex-col gap-1 p-1 rounded-md bg-cmd-panel/90 backdrop-blur border border-cmd-border">
+        {tools.map((t) => {
+          const Icon = t.icon
+          return (
+            <button
+              key={t.label}
+              onClick={t.set}
+              title={t.label}
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded font-mono text-[8px] tracking-wider transition-colors ${
+                t.on ? 'bg-cmd-green text-cmd-bg font-bold' : 'text-cmd-dim hover:text-cmd-text'
+              }`}
+            >
+              <Icon size={13} />
+              {t.label}
+            </button>
+          )
+        })}
+      </div>
+
       <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 panel bg-cmd-panel/90 backdrop-blur px-3 py-1 flex items-center gap-3 font-mono text-[10px]">
         <span className="text-cmd-dim">MGRS</span>
         <span className="text-cmd-accent w-44 text-center">{coord ? coord.mgrs : '——'}</span>

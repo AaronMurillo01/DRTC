@@ -28,6 +28,12 @@ command-and-control aesthetic and a correlation engine on top of the raw feeds.
     the high-severity tracks driving it — rendered in all map modes.
   - Engines are **lazy-loaded** — the heavy Three.js bundle only loads for the
     stylized globe.
+- **Map toolbar** (right edge):
+  - **SAT** — switch the dark vector basemap to Esri satellite imagery.
+  - **HEAT** — intel-density heatmap of the live track picture.
+  - **DAY/NIGHT** — live solar-terminator shading (computed client-side,
+    refreshed each minute).
+  - **ORBIT** — slow auto-rotate of the earth, auto-pausing while you interact.
 - **Time-range filter** (`1h · 6h · 24h · 48h · 7d · ALL`) scoping every live
   layer on the map, globe, and intel feed.
 - **Layer control panel** to toggle each data layer on/off (persisted).
