@@ -43,10 +43,20 @@ const STYLE: StyleSpecification = {
       maxzoom: 14,
       attribution: 'Terrain: Mapzen / AWS',
     },
+    // Bundled vector world (served from /public) so land always renders,
+    // even before the raster tiles load or if they are unavailable.
+    world: { type: 'geojson', data: '/world.geo.json' },
   },
   layers: [
-    { id: 'bg', type: 'background', paint: { 'background-color': '#05070a' } },
-    { id: 'carto', type: 'raster', source: 'carto', paint: { 'raster-opacity': 0.88 } },
+    { id: 'bg', type: 'background', paint: { 'background-color': '#05080e' } },
+    { id: 'land', type: 'fill', source: 'world', paint: { 'fill-color': '#0f1a27' } },
+    {
+      id: 'land-border',
+      type: 'line',
+      source: 'world',
+      paint: { 'line-color': '#24384f', 'line-width': 0.5, 'line-opacity': 0.7 },
+    },
+    { id: 'carto', type: 'raster', source: 'carto', paint: { 'raster-opacity': 0.92 } },
     {
       id: 'satellite',
       type: 'raster',
@@ -516,8 +526,8 @@ export default function MapView() {
     <>
       <div ref={containerRef} className="absolute inset-0" />
 
-      {/* Map toolbar — vertical strip on the right edge */}
-      <div className="absolute top-1/2 right-2 -translate-y-1/2 z-10 flex flex-col gap-1 p-1 rounded-md bg-cmd-panel/90 backdrop-blur border border-cmd-border">
+      {/* Map toolbar — horizontal strip, top right */}
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-1 p-1 rounded-lg bg-cmd-panel/90 backdrop-blur border border-cmd-border/80">
         {tools.map((t) => {
           const Icon = t.icon
           return (
@@ -525,18 +535,18 @@ export default function MapView() {
               key={t.label}
               onClick={t.set}
               title={t.label}
-              className={`flex items-center gap-1.5 px-2 py-1.5 rounded font-mono text-[8px] tracking-wider transition-colors ${
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md font-mono text-[9px] tracking-wider transition-colors ${
                 t.on ? 'bg-cmd-green text-cmd-bg font-bold' : 'text-cmd-dim hover:text-cmd-text'
               }`}
             >
               <Icon size={13} />
-              {t.label}
+              <span className="hidden lg:inline">{t.label}</span>
             </button>
           )
         })}
       </div>
 
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 panel bg-cmd-panel/90 backdrop-blur px-3 py-1 hidden md:flex items-center gap-3 font-mono text-[10px]">
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 panel bg-cmd-panel/90 backdrop-blur px-3 py-1 hidden md:flex items-center gap-3 font-mono text-[10px]">
         <span className="text-cmd-dim">MGRS</span>
         <span className="text-cmd-accent w-44 text-center">{coord ? coord.mgrs : '——'}</span>
         <span className="text-cmd-border">|</span>
