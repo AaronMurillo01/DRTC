@@ -9,19 +9,22 @@ export default {
       },
       colors: {
         cmd: {
-          bg: '#05070a',
-          panel: '#0a0e14',
-          panel2: '#0d131c',
-          border: '#1b2430',
+          bg: '#05080e',
+          panel: '#0b101a',
+          panel2: '#101825',
+          border: '#1d2838',
           grid: '#11202c',
-          text: '#c7d3df',
-          dim: '#5c6b7a',
+          text: '#d4dde8',
+          dim: '#6b7c90',
           accent: '#22d3ee',
           green: '#34d399',
           amber: '#fbbf24',
           red: '#f87171',
           magenta: '#e879f9',
         },
+      },
+      boxShadow: {
+        glow: '0 0 24px -4px rgba(34,211,238,0.35)',
       },
       keyframes: {
         ping2: {

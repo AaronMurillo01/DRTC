@@ -24,10 +24,9 @@ export function buildSITREP(input: ReportInput): string {
 
   const lines: string[] = []
   lines.push('# DRTC SITUATION REPORT')
-  lines.push('CLASSIFICATION: UNCLASSIFIED // FOR DEMONSTRATION ONLY // OSINT')
-  lines.push(`DTG: ${dtg(generatedAt)}`)
+  lines.push(`Generated: ${dtg(generatedAt)}`)
   lines.push('')
-  lines.push(`## 1. ASSESSMENT — CONDITION ${threat.level} (${threat.label})`)
+  lines.push(`## 1. Assessment: Condition ${threat.level} (${threat.label})`)
   lines.push(`Global Threat Index: ${threat.index}/100 (trend ${threat.trend}).`)
   lines.push('')
   lines.push(brief)
@@ -36,7 +35,7 @@ export function buildSITREP(input: ReportInput): string {
   if (top.length) {
     top.forEach((e, i) =>
       lines.push(
-        `${String(i + 1).padStart(2, '0')}. [SEV ${e.severity}] ${e.title} — ${e.summary} (${e.source}, ${dtg(e.timestamp)})`,
+        `${String(i + 1).padStart(2, '0')}. [SEV ${e.severity}] ${e.title}: ${e.summary} (${e.source}, ${dtg(e.timestamp)})`,
       ),
     )
   } else {
@@ -48,7 +47,7 @@ export function buildSITREP(input: ReportInput): string {
     .slice(0, 10)
     .forEach((c, i) =>
       lines.push(
-        `${String(i + 1).padStart(2, '0')}. ${c.name} (${c.iso}) — ${c.score} · ${c.drivers.join(', ')}`,
+        `${String(i + 1).padStart(2, '0')}. ${c.name} (${c.iso}): ${c.score} · ${c.drivers.join(', ')}`,
       ),
     )
   lines.push('')
@@ -62,7 +61,7 @@ export function buildSITREP(input: ReportInput): string {
 export function buildCOP(input: ReportInput): string {
   return JSON.stringify(
     {
-      classification: 'UNCLASSIFIED//FOR DEMONSTRATION ONLY//OSINT',
+      product: 'DRTC Common Operating Picture',
       generatedAt: dtg(input.generatedAt),
       threat: input.threat,
       countryRisk: input.countryRisk,

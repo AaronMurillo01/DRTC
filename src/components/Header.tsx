@@ -35,53 +35,66 @@ export default function Header() {
   const color = LEVEL_COLOR[threat.level]
 
   return (
-    <header className="shrink-0 h-14 border-b border-cmd-border bg-cmd-panel flex items-center justify-between px-4">
-      <div className="flex items-center gap-3">
+    <header className="shrink-0 h-16 flex items-center justify-between px-5 border-b border-cmd-border/70 bg-gradient-to-b from-cmd-panel2/80 to-cmd-panel/60 backdrop-blur">
+      {/* Brand */}
+      <div className="flex items-center gap-3.5">
         <div className="relative">
-          <div className="w-8 h-8 rounded border border-cmd-accent/50 flex items-center justify-center">
-            <Radio size={16} className="text-cmd-accent" />
+          <div className="w-9 h-9 rounded-lg border border-cmd-accent/40 bg-cmd-accent/5 flex items-center justify-center shadow-glow">
+            <Radio size={17} className="text-cmd-accent" />
           </div>
-          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cmd-green animate-flicker" />
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cmd-green ring-2 ring-cmd-bg animate-flicker" />
         </div>
         <div className="leading-tight">
-          <div className="font-mono font-bold tracking-[0.2em] text-cmd-text text-sm">DRTC</div>
-          <div className="font-mono text-[9px] text-cmd-dim tracking-wider">
-            DISTRIBUTED REAL-TIME COMMAND &amp; CONTROL
+          <div className="font-mono font-bold tracking-[0.28em] text-cmd-text text-[15px]">
+            DRTC
+          </div>
+          <div className="font-mono text-[8.5px] text-cmd-dim tracking-[0.2em] uppercase">
+            Distributed Real-Time Command &amp; Control
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-5">
         {/* Threat condition */}
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[9px] text-cmd-dim tracking-widest">CONDITION</span>
+        <div className="flex items-center gap-2.5">
+          <span className="font-mono text-[9px] text-cmd-dim tracking-[0.2em]">CONDITION</span>
           <div
-            className="flex items-center gap-2 px-3 py-1 rounded border font-mono"
-            style={{ borderColor: color, color, boxShadow: `0 0 12px ${color}33` }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono"
+            style={{
+              borderColor: `${color}66`,
+              color,
+              background: `${color}12`,
+              boxShadow: `0 0 18px -6px ${color}`,
+            }}
           >
             <Activity size={13} />
-            <span className="text-sm font-bold glow-text">
+            <span className="text-sm font-bold tracking-wide glow-text">
               {threat.level} · {threat.label}
             </span>
           </div>
         </div>
 
         {/* Clock */}
-        <div className="text-right leading-tight font-mono">
-          <div className="text-cmd-text text-sm tracking-wider">{utcClock(now)}</div>
-          <div className="text-cmd-dim text-[9px]">{utcDate(now)} · UTC</div>
+        <div className="text-right leading-tight font-mono border-l border-cmd-border/70 pl-5">
+          <div className="text-cmd-text text-sm tracking-[0.15em] tabular-nums">
+            {utcClock(now)}
+          </div>
+          <div className="text-cmd-dim text-[9px] tracking-wide">{utcDate(now)} · UTC</div>
         </div>
 
-        {/* Sources */}
+        {/* Feed health */}
         <div className="flex items-center gap-1.5 font-mono text-[11px]">
-          <span className="w-1.5 h-1.5 rounded-full bg-cmd-green" />
-          <span className="text-cmd-text">{online}</span>
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${online === total ? 'bg-cmd-green' : online === 0 ? 'bg-cmd-red' : 'bg-cmd-amber'}`}
+          />
+          <span className="text-cmd-text tabular-nums">{online}</span>
           <span className="text-cmd-dim">/{total} FEEDS</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* 2D map / 3D map / stylized globe toggle */}
-          <div className="flex items-center p-0.5 rounded border border-cmd-border">
+        {/* Controls */}
+        <div className="flex items-center gap-2 border-l border-cmd-border/70 pl-5">
+          {/* view toggle */}
+          <div className="flex items-center p-0.5 rounded-lg border border-cmd-border/80 bg-cmd-bg/40">
             {(
               [
                 ['2d', '2D'],
@@ -95,45 +108,49 @@ export default function Header() {
                 title={
                   m === '3d' ? '3D terrain map' : m === 'globe' ? 'Stylized globe' : 'Flat map'
                 }
-                className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold tracking-wider transition-colors ${
-                  viewMode === m ? 'bg-cmd-green text-cmd-bg' : 'text-cmd-dim hover:text-cmd-text'
+                className={`px-2.5 py-1 rounded-md font-mono text-[10px] font-bold tracking-wider transition-all duration-150 ${
+                  viewMode === m
+                    ? 'bg-cmd-accent/90 text-cmd-bg shadow-glow'
+                    : 'text-cmd-dim hover:text-cmd-text'
                 }`}
               >
                 {label}
               </button>
             ))}
           </div>
+
           <button
             onClick={clearAlerts}
             title={alerts.length ? 'Clear alerts' : 'No active alerts'}
-            className="relative flex items-center px-2.5 py-1 rounded border border-cmd-border hover:border-cmd-red/60 text-cmd-dim hover:text-cmd-text transition-colors"
+            className="ctl relative !px-2"
           >
             <Bell size={13} className={alerts.length ? 'text-cmd-red' : ''} />
             {alerts.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-cmd-red text-cmd-bg font-mono text-[8px] font-bold flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-cmd-red text-cmd-bg font-mono text-[8px] font-bold flex items-center justify-center ring-2 ring-cmd-bg">
                 {alerts.length > 99 ? '99+' : alerts.length}
               </span>
             )}
           </button>
+
           <button
             onClick={togglePause}
-            title={paused ? 'Resume feeds (Space)' : 'Pause feeds (Space)'}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cmd-border hover:border-cmd-accent/60 font-mono text-[11px] text-cmd-dim hover:text-cmd-text transition-colors"
+            title={paused ? 'Resume feeds' : 'Pause feeds'}
+            className="ctl"
           >
             {paused ? <Play size={12} /> : <Pause size={12} />}
             {paused ? 'PAUSED' : 'LIVE'}
           </button>
+
           <ExportMenu />
-          <button
-            onClick={() => setCommandOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cmd-border hover:border-cmd-accent/60 font-mono text-[11px] text-cmd-dim hover:text-cmd-text transition-colors"
-          >
+
+          <button onClick={() => setCommandOpen(true)} className="ctl">
             <Command size={12} /> ⌘K
           </button>
+
           <button
             onClick={() => setHelpOpen(true)}
             title="Keyboard & controls (?)"
-            className="flex items-center px-2 py-1 rounded border border-cmd-border hover:border-cmd-accent/60 text-cmd-dim hover:text-cmd-text transition-colors"
+            className="ctl !px-2"
           >
             <HelpCircle size={13} />
           </button>

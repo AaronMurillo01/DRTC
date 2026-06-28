@@ -42,11 +42,7 @@ export default function ExportMenu() {
 
   return (
     <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        title="Export products"
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cmd-border hover:border-cmd-accent/60 font-mono text-[11px] text-cmd-dim hover:text-cmd-text transition-colors"
-      >
+      <button onClick={() => setOpen((o) => !o)} title="Export products" className="ctl">
         <Download size={12} /> EXPORT
       </button>
       {open && (

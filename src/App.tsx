@@ -14,7 +14,6 @@ import EventDetail from './components/EventDetail'
 import BriefOverlay from './components/BriefOverlay'
 import AlertsOverlay from './components/AlertsOverlay'
 import LayerLegend from './components/LayerLegend'
-import ClassificationBanner from './components/ClassificationBanner'
 import ErrorBoundary from './components/ErrorBoundary'
 import KeyboardHelp from './components/KeyboardHelp'
 
@@ -65,9 +64,8 @@ export default function App() {
 
   return (
     <div className="h-full w-full flex flex-col bg-cmd-bg text-cmd-text overflow-hidden">
-      <ClassificationBanner position="top" />
       <Header />
-      <main className="flex-1 min-h-0 grid grid-cols-[330px_1fr_340px] gap-2 p-2">
+      <main className="flex-1 min-h-0 grid grid-cols-[336px_1fr_344px] gap-2.5 p-2.5">
         {/* Left column — live intel stream + system health */}
         <div className="flex flex-col gap-2 min-h-0">
           <ErrorBoundary label="INTEL FEED">
@@ -111,7 +109,6 @@ export default function App() {
         </div>
       </main>
       <StatusBar />
-      <ClassificationBanner position="bottom" />
       <AlertsOverlay />
       <CommandPalette />
       <KeyboardHelp />
