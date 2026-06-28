@@ -49,6 +49,8 @@ export default function App() {
         setViewMode('2d')
       } else if (e.key === '3') {
         setViewMode('3d')
+      } else if (e.key.toLowerCase() === 'g') {
+        setViewMode('globe')
       } else if (e.key === '?') {
         setHelpOpen(!useStore.getState().helpOpen)
       } else if (e.key === 'Escape') {
@@ -82,11 +84,11 @@ export default function App() {
             <Suspense
               fallback={
                 <div className="absolute inset-0 flex items-center justify-center font-mono text-[11px] text-cmd-dim animate-flicker">
-                  ░ INITIALIZING {viewMode === '2d' ? 'MAP' : 'GLOBE'} ENGINE ░
+                  ░ INITIALIZING {viewMode === 'globe' ? 'GLOBE' : 'MAP'} ENGINE ░
                 </div>
               }
             >
-              {viewMode === '2d' ? <MapView /> : <GlobeView />}
+              {viewMode === 'globe' ? <GlobeView /> : <MapView />}
             </Suspense>
           </ErrorBoundary>
           <TimeRange />

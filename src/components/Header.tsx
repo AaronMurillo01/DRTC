@@ -80,17 +80,26 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* 2D / 3D view toggle */}
+          {/* 2D map / 3D map / stylized globe toggle */}
           <div className="flex items-center p-0.5 rounded border border-cmd-border">
-            {(['2d', '3d'] as const).map((m) => (
+            {(
+              [
+                ['2d', '2D'],
+                ['3d', '3D'],
+                ['globe', 'GLB'],
+              ] as const
+            ).map(([m, label]) => (
               <button
                 key={m}
                 onClick={() => setViewMode(m)}
+                title={
+                  m === '3d' ? '3D terrain map' : m === 'globe' ? 'Stylized globe' : 'Flat map'
+                }
                 className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold tracking-wider transition-colors ${
                   viewMode === m ? 'bg-cmd-green text-cmd-bg' : 'text-cmd-dim hover:text-cmd-text'
                 }`}
               >
-                {m.toUpperCase()}
+                {label}
               </button>
             ))}
           </div>

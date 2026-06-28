@@ -3,7 +3,7 @@ import { useStore } from '../store'
 const SHORTCUTS: [string, string][] = [
   ['⌘ / Ctrl + K', 'Open command palette'],
   ['Space', 'Pause / resume live feeds'],
-  ['2 / 3', 'Switch 2D map / 3D globe'],
+  ['2 / 3 / G', '2D map · 3D terrain · stylized globe'],
   ['?', 'Toggle this help'],
   ['Esc', 'Close overlays / clear selection'],
   ['Click track', 'Select & fly to event'],

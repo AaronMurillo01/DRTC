@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import maplibregl, { type GeoJSONSource, type StyleSpecification } from 'maplibre-gl'
 import { forward as mgrsForward } from 'mgrs'
 import { CATEGORY_META, useStore, visibleEvents } from '../store'
-import type { CountryRisk, IntelEvent } from '../types'
+import type { CountryRisk, IntelEvent, ViewMode } from '../types'
 
 interface Coord {
   lat: number
@@ -11,6 +11,7 @@ interface Coord {
 }
 
 // Dark basemap from CARTO (free, key-less, CORS-enabled) — © OpenStreetMap © CARTO.
+// Terrain DEM is AWS Terrain Tiles (Terrarium encoding, free, key-less).
 const STYLE: StyleSpecification = {
   version: 8,
   sources: {
@@ -25,11 +26,32 @@ const STYLE: StyleSpecification = {
       tileSize: 256,
       attribution: '© OpenStreetMap © CARTO',
     },
+    dem: {
+      type: 'raster-dem',
+      tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+      encoding: 'terrarium',
+      tileSize: 256,
+      maxzoom: 14,
+      attribution: 'Terrain: Mapzen / AWS',
+    },
   },
   layers: [
     { id: 'bg', type: 'background', paint: { 'background-color': '#05070a' } },
-    { id: 'carto', type: 'raster', source: 'carto', paint: { 'raster-opacity': 0.85 } },
+    { id: 'carto', type: 'raster', source: 'carto', paint: { 'raster-opacity': 0.88 } },
   ],
+}
+
+// Apply 2D (flat mercator) vs 3D (globe projection + terrain + tilt).
+function applyView(map: maplibregl.Map, mode: ViewMode) {
+  if (mode === '3d') {
+    map.setProjection({ type: 'globe' })
+    if (map.getSource('dem')) map.setTerrain({ source: 'dem', exaggeration: 1.4 })
+    map.easeTo({ pitch: 55, zoom: Math.max(map.getZoom(), 2.4), duration: 900 })
+  } else {
+    map.setTerrain(null)
+    map.setProjection({ type: 'mercator' })
+    map.easeTo({ pitch: 0, bearing: 0, duration: 700 })
+  }
 }
 
 function eventsFC(events: IntelEvent[]): GeoJSON.FeatureCollection {
@@ -63,6 +85,64 @@ function riskFC(risk: CountryRisk[]): GeoJSON.FeatureCollection {
   }
 }
 
+const D2R = Math.PI / 180
+const R2D = 180 / Math.PI
+
+// Great-circle interpolation between two lon/lat points (for correlation arcs).
+function greatCircle(a: [number, number], b: [number, number], n = 48): number[][] {
+  const [lon1, lat1] = [a[0] * D2R, a[1] * D2R]
+  const [lon2, lat2] = [b[0] * D2R, b[1] * D2R]
+  const d =
+    2 *
+    Math.asin(
+      Math.sqrt(
+        Math.sin((lat2 - lat1) / 2) ** 2 +
+          Math.cos(lat1) * Math.cos(lat2) * Math.sin((lon2 - lon1) / 2) ** 2,
+      ),
+    )
+  if (d === 0 || Number.isNaN(d)) return [a, b]
+  const pts: number[][] = []
+  for (let i = 0; i <= n; i++) {
+    const f = i / n
+    const A = Math.sin((1 - f) * d) / Math.sin(d)
+    const B = Math.sin(f * d) / Math.sin(d)
+    const x = A * Math.cos(lat1) * Math.cos(lon1) + B * Math.cos(lat2) * Math.cos(lon2)
+    const y = A * Math.cos(lat1) * Math.sin(lon1) + B * Math.cos(lat2) * Math.sin(lon2)
+    const z = A * Math.sin(lat1) + B * Math.sin(lat2)
+    pts.push([Math.atan2(y, x) * R2D, Math.atan2(z, Math.hypot(x, y)) * R2D])
+  }
+  return pts
+}
+
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const dLat = (bLat - aLat) * D2R
+  const dLng = (bLng - aLng) * D2R
+  const s =
+    Math.sin(dLat / 2) ** 2 + Math.cos(aLat * D2R) * Math.cos(bLat * D2R) * Math.sin(dLng / 2) ** 2
+  return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(s)))
+}
+
+// Arcs from the most unstable watch-country to nearby high-severity tracks.
+function arcsFC(risk: CountryRisk[], events: IntelEvent[]): GeoJSON.FeatureCollection {
+  const top = risk[0]
+  const located = events.filter((e) => e.lat != null && e.lng != null && e.severity >= 60)
+  if (!top) return { type: 'FeatureCollection', features: [] }
+  const features = located
+    .map((e) => ({ e, d: haversineKm(top.lat, top.lng, e.lat!, e.lng!) }))
+    .filter((x) => x.d <= 1600)
+    .sort((a, b) => b.e.severity - a.e.severity)
+    .slice(0, 14)
+    .map<GeoJSON.Feature>((x) => ({
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: greatCircle([x.e.lng!, x.e.lat!], [top.lng, top.lat]),
+      },
+      properties: { color: CATEGORY_META[x.e.category].color },
+    }))
+  return { type: 'FeatureCollection', features }
+}
+
 export default function MapView() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -75,6 +155,7 @@ export default function MapView() {
   const risk = useStore((s) => s.countryRisk)
   const select = useStore((s) => s.select)
   const selectedId = useStore((s) => s.selectedId)
+  const viewMode = useStore((s) => s.viewMode)
 
   // Init once.
   useEffect(() => {
@@ -83,19 +164,31 @@ export default function MapView() {
       container: containerRef.current,
       style: STYLE,
       center: [12, 25],
-      zoom: 1.4,
+      zoom: 1.5,
       attributionControl: { compact: true },
-      maxZoom: 12,
+      maxZoom: 16,
+      maxPitch: 75,
     })
     mapRef.current = map
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right')
     popupRef.current = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 })
 
     map.on('load', () => {
+      // Atmospheric sky for the 3D/tilted view.
+      map.setSky({
+        'sky-color': '#0a1420',
+        'horizon-color': '#0d1f2c',
+        'fog-color': '#05070a',
+        'sky-horizon-blend': 0.5,
+        'horizon-fog-blend': 0.5,
+        'fog-ground-blend': 0.5,
+        'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 0.8, 6, 0],
+      })
+
       map.addSource('risk', { type: 'geojson', data: riskFC([]) })
+      map.addSource('arcs', { type: 'geojson', data: arcsFC([], []) })
       map.addSource('events', { type: 'geojson', data: eventsFC([]) })
 
-      // Instability "zones" — translucent fills scaled by score.
       map.addLayer({
         id: 'risk-zone',
         type: 'circle',
@@ -120,7 +213,19 @@ export default function MapView() {
         },
       })
 
-      // Severity glow under high-alert tracks.
+      map.addLayer({
+        id: 'arcs',
+        type: 'line',
+        source: 'arcs',
+        layout: { 'line-cap': 'round' },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': 1.2,
+          'line-opacity': 0.55,
+          'line-blur': 0.3,
+        },
+      })
+
       map.addLayer({
         id: 'events-glow',
         type: 'circle',
@@ -134,7 +239,6 @@ export default function MapView() {
         },
       })
 
-      // Main tracks.
       map.addLayer({
         id: 'events-pt',
         type: 'circle',
@@ -148,7 +252,6 @@ export default function MapView() {
         },
       })
 
-      // Selected highlight ring.
       map.addLayer({
         id: 'events-sel',
         type: 'circle',
@@ -163,10 +266,11 @@ export default function MapView() {
       })
 
       readyRef.current = true
-      ;(map.getSource('events') as GeoJSONSource)?.setData(
-        eventsFC(visibleEvents(useStore.getState())),
-      )
-      ;(map.getSource('risk') as GeoJSONSource)?.setData(riskFC(useStore.getState().countryRisk))
+      const st = useStore.getState()
+      ;(map.getSource('events') as GeoJSONSource)?.setData(eventsFC(visibleEvents(st)))
+      ;(map.getSource('risk') as GeoJSONSource)?.setData(riskFC(st.countryRisk))
+      ;(map.getSource('arcs') as GeoJSONSource)?.setData(arcsFC(st.countryRisk, visibleEvents(st)))
+      applyView(map, st.viewMode)
 
       const onEnter = (e: maplibregl.MapLayerMouseEvent) => {
         map.getCanvas().style.cursor = 'pointer'
@@ -221,18 +325,29 @@ export default function MapView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Push event + risk data on change.
+  // Push event + arc data on change.
   useEffect(() => {
     const map = mapRef.current
     if (!map || !readyRef.current) return
     ;(map.getSource('events') as GeoJSONSource)?.setData(eventsFC(events))
+    ;(map.getSource('arcs') as GeoJSONSource)?.setData(
+      arcsFC(useStore.getState().countryRisk, events),
+    )
   }, [events])
 
   useEffect(() => {
     const map = mapRef.current
     if (!map || !readyRef.current) return
     ;(map.getSource('risk') as GeoJSONSource)?.setData(riskFC(risk))
+    ;(map.getSource('arcs') as GeoJSONSource)?.setData(arcsFC(risk, useStore.getState().events))
   }, [risk])
+
+  // 2D / 3D projection + terrain switch.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !readyRef.current) return
+    applyView(map, viewMode)
+  }, [viewMode])
 
   // Selected highlight + fly-to.
   useEffect(() => {

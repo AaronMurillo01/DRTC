@@ -15,14 +15,19 @@ command-and-control aesthetic and a correlation engine on top of the raw feeds.
 
 ## Features
 
-- **Dual map engine — 2D flat map + 3D globe**, switchable from the header:
+- **Triple map engine — 2D · 3D · Globe**, switchable from the header (or
+  keys `2` / `3` / `G`):
   - **2D WebGL map** (MapLibre GL) on a dark CARTO basemap, plotting every
     geolocated track as a severity-scaled circle with high-alert glow, hover
     tooltips, click-to-select, instability "zones", and zoom controls.
-  - **3D globe** (`react-globe.gl` / Three.js) with the same tracks plus
-    animated pulse rings and correlation arcs.
-  - Both engines are **lazy-loaded** — the heavy Three.js bundle only loads
-    when you switch to 3D.
+  - **3D terrain map** — the same live MapLibre basemap rendered on a true
+    **globe projection** with **3D terrain relief** (AWS Terrain Tiles),
+    atmospheric sky, and free tilt/rotate (drag, or the pitch control).
+  - **Stylized globe** (`react-globe.gl` / Three.js) with pulse rings.
+  - **Great-circle correlation arcs** link the most unstable watch-country to
+    the high-severity tracks driving it — rendered in all map modes.
+  - Engines are **lazy-loaded** — the heavy Three.js bundle only loads for the
+    stylized globe.
 - **Time-range filter** (`1h · 6h · 24h · 48h · 7d · ALL`) scoping every live
   layer on the map, globe, and intel feed.
 - **Layer control panel** to toggle each data layer on/off (persisted).
@@ -120,6 +125,7 @@ React 18 · TypeScript · Vite · Tailwind CSS · Zustand · MapLibre GL (2D map
 Tooling: Vitest · ESLint · Prettier · vite-plugin-pwa · GitHub Actions.
 
 Basemap: CARTO dark tiles (free, key-less) — © OpenStreetMap © CARTO.
+Terrain: AWS Terrain Tiles (Terrarium DEM, free, key-less).
 
 ## Scripts
 
