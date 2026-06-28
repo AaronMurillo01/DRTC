@@ -40,10 +40,7 @@ export default function GlobeView() {
   const select = useStore((s) => s.select)
   const selectedId = useStore((s) => s.selectedId)
 
-  const located = useMemo(
-    () => events.filter((e) => e.lat != null && e.lng != null),
-    [events],
-  )
+  const located = useMemo(() => events.filter((e) => e.lat != null && e.lng != null), [events])
   const rings = useMemo(
     () => located.filter((e) => e.severity >= 65 || e.category === 'orbital'),
     [located],
@@ -174,6 +171,8 @@ function pointTooltip(e: IntelEvent): string {
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
+  return s.replace(
+    /[&<>"]/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!,
+  )
 }
-

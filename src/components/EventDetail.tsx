@@ -17,7 +17,9 @@ export default function EventDetail() {
       style={{ borderColor: meta.color + '66', boxShadow: `0 0 24px ${meta.color}22` }}
     >
       <div className="panel-header" style={{ color: meta.color }}>
-        <span>{meta.label} · SEV {ev.severity}</span>
+        <span>
+          {meta.label} · SEV {ev.severity}
+        </span>
         <button onClick={() => select(null)} className="hover:text-cmd-text">
           <X size={13} />
         </button>

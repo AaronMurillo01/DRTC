@@ -12,20 +12,18 @@ import type {
 } from './types'
 import { buildBrief, computeCountryRisk, computeThreat } from './services/threat'
 
-export const CATEGORY_META: Record<
-  EventCategory,
-  { label: string; color: string; short: string }
-> = {
-  seismic: { label: 'Seismic', color: '#fbbf24', short: 'SEIS' },
-  disaster: { label: 'Disaster', color: '#f87171', short: 'DSTR' },
-  space: { label: 'Space Weather', color: '#e879f9', short: 'SPCE' },
-  orbital: { label: 'Orbital', color: '#22d3ee', short: 'ORBT' },
-  market: { label: 'Markets', color: '#34d399', short: 'MKT' },
-  cyber: { label: 'Cyber', color: '#60a5fa', short: 'CYBR' },
-  signals: { label: 'Signals', color: '#34d399', short: 'SIG' },
-  spaceport: { label: 'Spaceports', color: '#a78bfa', short: 'SPRT' },
-  nuclear: { label: 'Nuclear Sites', color: '#facc15', short: 'NUKE' },
-}
+export const CATEGORY_META: Record<EventCategory, { label: string; color: string; short: string }> =
+  {
+    seismic: { label: 'Seismic', color: '#fbbf24', short: 'SEIS' },
+    disaster: { label: 'Disaster', color: '#f87171', short: 'DSTR' },
+    space: { label: 'Space Weather', color: '#e879f9', short: 'SPCE' },
+    orbital: { label: 'Orbital', color: '#22d3ee', short: 'ORBT' },
+    market: { label: 'Markets', color: '#34d399', short: 'MKT' },
+    cyber: { label: 'Cyber', color: '#60a5fa', short: 'CYBR' },
+    signals: { label: 'Signals', color: '#34d399', short: 'SIG' },
+    spaceport: { label: 'Spaceports', color: '#a78bfa', short: 'SPRT' },
+    nuclear: { label: 'Nuclear Sites', color: '#facc15', short: 'NUKE' },
+  }
 
 // Persistent reference layers — exempt from the time filter and the intel feed.
 export const STATIC_CATEGORIES = new Set<EventCategory>(['spaceport', 'nuclear'])
@@ -87,6 +85,7 @@ interface DRTCState {
   timeRange: TimeRangeKey
   paused: boolean
   commandOpen: boolean
+  helpOpen: boolean
   lastTick: number
 
   setSourceStatus: (id: string, patch: Partial<FeedSource>) => void
@@ -101,19 +100,108 @@ interface DRTCState {
   setTimeRange: (t: TimeRangeKey) => void
   togglePause: () => void
   setCommandOpen: (open: boolean) => void
+  setHelpOpen: (open: boolean) => void
   dismissAlert: (id: string) => void
   clearAlerts: () => void
 }
 
 const INITIAL_SOURCES: FeedSource[] = [
-  { id: 'seismic', label: 'USGS Seismic', category: 'seismic', status: 'pending', lastSync: null, count: 0, latencyMs: null },
-  { id: 'disaster', label: 'NASA EONET', category: 'disaster', status: 'pending', lastSync: null, count: 0, latencyMs: null },
-  { id: 'space', label: 'NOAA Space Wx', category: 'space', status: 'pending', lastSync: null, count: 0, latencyMs: null },
-  { id: 'orbital', label: 'ISS Telemetry', category: 'orbital', status: 'pending', lastSync: null, count: 0, latencyMs: null },
-  { id: 'signals', label: 'GDELT Signals', category: 'signals', status: 'pending', lastSync: null, count: 0, latencyMs: null },
-  { id: 'market', label: 'Markets Radar', category: 'market', status: 'pending', lastSync: null, count: 0, latencyMs: null },
-  { id: 'spaceport', label: 'Spaceports', category: 'spaceport', status: 'pending', lastSync: null, count: 0, latencyMs: null },
-  { id: 'nuclear', label: 'Nuclear Sites', category: 'nuclear', status: 'pending', lastSync: null, count: 0, latencyMs: null },
+  {
+    id: 'seismic',
+    label: 'USGS Seismic',
+    category: 'seismic',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
+  {
+    id: 'disaster',
+    label: 'NASA EONET',
+    category: 'disaster',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
+  {
+    id: 'space',
+    label: 'NOAA Space Wx',
+    category: 'space',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
+  {
+    id: 'orbital',
+    label: 'ISS Telemetry',
+    category: 'orbital',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
+  {
+    id: 'signals',
+    label: 'GDELT Signals',
+    category: 'signals',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
+  {
+    id: 'market',
+    label: 'Markets Radar',
+    category: 'market',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
+  {
+    id: 'spaceport',
+    label: 'Spaceports',
+    category: 'spaceport',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
+  {
+    id: 'nuclear',
+    label: 'Nuclear Sites',
+    category: 'nuclear',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
 ]
 
 const prefs = loadPrefs()
@@ -136,6 +224,7 @@ export const useStore = create<DRTCState>((set) => ({
   timeRange: prefs?.timeRange ?? '7d',
   paused: false,
   commandOpen: false,
+  helpOpen: false,
   lastTick: 0,
 
   setSourceStatus: (id, patch) =>
@@ -189,7 +278,8 @@ export const useStore = create<DRTCState>((set) => ({
   toggleCategory: (cat) =>
     set((s) => {
       const next = new Set(s.activeCategories)
-      next.has(cat) ? next.delete(cat) : next.add(cat)
+      if (next.has(cat)) next.delete(cat)
+      else next.add(cat)
       const patch = { activeCategories: next }
       savePrefs(prefsOf(s, patch))
       return patch
@@ -214,6 +304,7 @@ export const useStore = create<DRTCState>((set) => ({
     }),
   togglePause: () => set((s) => ({ paused: !s.paused })),
   setCommandOpen: (open) => set({ commandOpen: open }),
+  setHelpOpen: (open) => set({ helpOpen: open }),
   dismissAlert: (id) => set((s) => ({ alerts: s.alerts.filter((a) => a.id !== id) })),
   clearAlerts: () => set({ alerts: [] }),
 }))

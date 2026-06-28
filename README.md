@@ -52,9 +52,42 @@ command-and-control aesthetic and a correlation engine on top of the raw feeds.
   filters, and feeds.
 - **Feed Integrity panel** — per-source health, latency, and last-sync, with
   graceful degraded/offline states.
-- **Persisted preferences** — active layers and severity floor are saved to
-  `localStorage` and restored on reload.
+- **Persisted preferences** — active layers, severity floor, view mode, and
+  time range are saved to `localStorage` and restored on reload.
 - **Pause/Resume**, live UTC clock, and a scrolling priority-event ticker.
+
+## Defense-grade (C2) features
+
+- **Classification banners** (top & bottom) in the operational
+  `UNCLASSIFIED // FOR DEMONSTRATION ONLY // OSINT` format.
+- **MGRS + lat/lon cursor HUD** — live Military Grid Reference System readout as
+  you move over the 2D map.
+- **Exportable products** — one-click **SITREP** (formatted Markdown report with
+  DTG, condition, priority tracks, instability posture) and **COP** (JSON
+  snapshot of the full common operating picture).
+- **System Health / BIT panel** — built-in-test view with per-source status,
+  latency sparklines, consecutive-failure counts, and an aggregate
+  `N/M NOMINAL` readout.
+- **Resilient ingest** — bounded retry with exponential backoff + jitter, and a
+  per-source **circuit breaker** that backs a wedged feed off (up to 10 min)
+  instead of hammering it.
+- **Keyboard-driven ops** — `⌘K` palette, `Space` pause, `2`/`3` view switch,
+  `?` help, `Esc` to clear, all documented in an in-app shortcuts overlay.
+
+## Production engineering
+
+- **Unit tests** (Vitest) covering the correlation engine, store reducers,
+  filtering, alert warm-up, and utilities — `npm test`.
+- **CI** (GitHub Actions): type-check → lint → format-check → tests → build on
+  every push/PR to `main`.
+- **Linting & formatting** — ESLint (typescript-eslint + react-hooks) and
+  Prettier, enforced in CI.
+- **Error boundaries** isolate every panel and the map engine so one failing
+  widget can't black out the whole console.
+- **Code-split & lazy-loaded** view engines; vendor chunks split
+  (three / maplibre) for fast first paint.
+- **Installable PWA** with offline app-shell caching and runtime basemap
+  caching (works after first load without a network).
 
 ## Improvements over the original
 
@@ -82,9 +115,24 @@ disasters every 5 min, etc.) and degrades independently if a source is down.
 
 ## Tech stack
 
-React 18 · TypeScript · Vite · Tailwind CSS · Zustand · MapLibre GL (2D map) · react-globe.gl / Three.js (3D globe) · lucide-react
+React 18 · TypeScript · Vite · Tailwind CSS · Zustand · MapLibre GL (2D map) · react-globe.gl / Three.js (3D globe) · MGRS · lucide-react
+
+Tooling: Vitest · ESLint · Prettier · vite-plugin-pwa · GitHub Actions.
 
 Basemap: CARTO dark tiles (free, key-less) — © OpenStreetMap © CARTO.
+
+## Scripts
+
+```bash
+npm run dev          # dev server
+npm run build        # type-check + production build (PWA)
+npm run preview      # serve the production build
+npm test             # watch-mode unit tests
+npm run test:run     # one-shot unit tests
+npm run lint         # eslint
+npm run format       # prettier --write
+npm run typecheck    # tsc --noEmit
+```
 
 ## Getting started
 

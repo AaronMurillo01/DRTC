@@ -21,7 +21,10 @@ export default function LayerLegend() {
 
   return (
     <div className="absolute bottom-2 left-2 z-10 w-48 panel bg-cmd-panel/90 backdrop-blur">
-      <button onClick={() => setOpen((o) => !o)} className="panel-header w-full hover:text-cmd-text">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="panel-header w-full hover:text-cmd-text"
+      >
         <span className="flex items-center gap-1.5">
           <Layers size={11} /> Layers
         </span>
@@ -44,7 +47,10 @@ export default function LayerLegend() {
                 >
                   {on && <span className="text-cmd-bg text-[9px] font-bold leading-none">✓</span>}
                 </span>
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: meta.color }} />
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ background: meta.color }}
+                />
                 <span
                   className="font-mono text-[10px] uppercase tracking-wider"
                   style={{ color: on ? meta.color : '#5c6b7a' }}

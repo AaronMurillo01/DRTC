@@ -128,7 +128,9 @@ export default function CommandPalette() {
               }`}
             >
               <span className="text-[12px] text-cmd-text">{c.label}</span>
-              {c.hint && <span className="font-mono text-[8px] text-cmd-dim tracking-wider">{c.hint}</span>}
+              {c.hint && (
+                <span className="font-mono text-[8px] text-cmd-dim tracking-wider">{c.hint}</span>
+              )}
             </button>
           ))}
         </div>

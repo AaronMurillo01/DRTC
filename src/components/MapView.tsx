@@ -1,7 +1,14 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import maplibregl, { type GeoJSONSource, type StyleSpecification } from 'maplibre-gl'
+import { forward as mgrsForward } from 'mgrs'
 import { CATEGORY_META, useStore, visibleEvents } from '../store'
 import type { CountryRisk, IntelEvent } from '../types'
+
+interface Coord {
+  lat: number
+  lng: number
+  mgrs: string
+}
 
 // Dark basemap from CARTO (free, key-less, CORS-enabled) — © OpenStreetMap © CARTO.
 const STYLE: StyleSpecification = {
@@ -61,6 +68,8 @@ export default function MapView() {
   const mapRef = useRef<maplibregl.Map | null>(null)
   const popupRef = useRef<maplibregl.Popup | null>(null)
   const readyRef = useRef(false)
+  const lastMoveRef = useRef(0)
+  const [coord, setCoord] = useState<Coord | null>(null)
 
   const events = useStore(visibleEvents)
   const risk = useStore((s) => s.countryRisk)
@@ -94,8 +103,17 @@ export default function MapView() {
         paint: {
           'circle-radius': ['interpolate', ['linear'], ['get', 'score'], 20, 14, 100, 46],
           'circle-color': [
-            'interpolate', ['linear'], ['get', 'score'],
-            30, '#34d399', 50, '#fbbf24', 70, '#fb923c', 85, '#f87171',
+            'interpolate',
+            ['linear'],
+            ['get', 'score'],
+            30,
+            '#34d399',
+            50,
+            '#fbbf24',
+            70,
+            '#fb923c',
+            85,
+            '#f87171',
           ],
           'circle-opacity': 0.12,
           'circle-blur': 0.6,
@@ -145,7 +163,9 @@ export default function MapView() {
       })
 
       readyRef.current = true
-      ;(map.getSource('events') as GeoJSONSource)?.setData(eventsFC(visibleEvents(useStore.getState())))
+      ;(map.getSource('events') as GeoJSONSource)?.setData(
+        eventsFC(visibleEvents(useStore.getState())),
+      )
       ;(map.getSource('risk') as GeoJSONSource)?.setData(riskFC(useStore.getState().countryRisk))
 
       const onEnter = (e: maplibregl.MapLayerMouseEvent) => {
@@ -172,6 +192,22 @@ export default function MapView() {
         const id = e.features?.[0]?.properties?.id as string | undefined
         if (id) select(id)
       })
+
+      // MGRS / lat-lon cursor readout (throttled to ~12fps).
+      map.on('mousemove', (e) => {
+        const now = performance.now()
+        if (now - lastMoveRef.current < 80) return
+        lastMoveRef.current = now
+        const { lng, lat } = e.lngLat
+        let mgrs = 'OUT OF GRID'
+        try {
+          mgrs = mgrsForward([lng, lat], 4)
+        } catch {
+          /* polar regions are outside the MGRS grid */
+        }
+        setCoord({ lat, lng, mgrs })
+      })
+      map.on('mouseout', () => setCoord(null))
     })
 
     const ro = new ResizeObserver(() => map.resize())
@@ -209,5 +245,17 @@ export default function MapView() {
     }
   }, [selectedId, events])
 
-  return <div ref={containerRef} className="absolute inset-0" />
+  return (
+    <>
+      <div ref={containerRef} className="absolute inset-0" />
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 panel bg-cmd-panel/90 backdrop-blur px-3 py-1 flex items-center gap-3 font-mono text-[10px]">
+        <span className="text-cmd-dim">MGRS</span>
+        <span className="text-cmd-accent w-44 text-center">{coord ? coord.mgrs : '——'}</span>
+        <span className="text-cmd-border">|</span>
+        <span className="text-cmd-text w-32 text-center">
+          {coord ? `${coord.lat.toFixed(3)}, ${coord.lng.toFixed(3)}` : '——'}
+        </span>
+      </div>
+    </>
+  )
 }

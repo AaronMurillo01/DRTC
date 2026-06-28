@@ -16,7 +16,9 @@ export default function StatusBar() {
   return (
     <footer className="shrink-0 h-7 border-t border-cmd-border bg-cmd-panel flex items-center text-[10px] font-mono overflow-hidden">
       <div className="flex items-center gap-2 px-3 border-r border-cmd-border shrink-0 text-cmd-dim">
-        <span className={`w-1.5 h-1.5 rounded-full ${paused ? 'bg-cmd-amber' : 'bg-cmd-green animate-flicker'}`} />
+        <span
+          className={`w-1.5 h-1.5 rounded-full ${paused ? 'bg-cmd-amber' : 'bg-cmd-green animate-flicker'}`}
+        />
         {paused ? 'FEEDS HELD' : 'STREAMING'}
       </div>
       <div className="flex-1 overflow-hidden relative">

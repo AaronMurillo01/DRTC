@@ -114,7 +114,8 @@ export function buildBrief(
   risk: CountryRisk[],
   markets: MarketTick[],
 ): string {
-  if (!events.length) return 'Awaiting feed acquisition. No tracks in the common operating picture yet.'
+  if (!events.length)
+    return 'Awaiting feed acquisition. No tracks in the common operating picture yet.'
 
   const by = (c: string) => events.filter((e) => e.category === c)
   const seismic = by('seismic')
@@ -123,20 +124,29 @@ export function buildBrief(
   const signals = by('signals')
 
   const parts: string[] = []
-  parts.push(`Condition ${threat.level} (${threat.label}); Global Threat Index ${threat.index}/100, trend ${threat.trend}.`)
+  parts.push(
+    `Condition ${threat.level} (${threat.label}); Global Threat Index ${threat.index}/100, trend ${threat.trend}.`,
+  )
 
   const topHot = [...signals].sort((a, b) => b.severity - a.severity)[0]
   if (topHot) parts.push(`Media/crisis attention concentrating on ${topHot.title}.`)
 
   const bigQuake = [...seismic].sort((a, b) => b.severity - a.severity)[0]
-  if (bigQuake) parts.push(`${seismic.length} seismic events tracked; strongest ${bigQuake.title} near ${bigQuake.region ?? 'unknown'}.`)
+  if (bigQuake)
+    parts.push(
+      `${seismic.length} seismic events tracked; strongest ${bigQuake.title} near ${bigQuake.region ?? 'unknown'}.`,
+    )
 
-  if (disasters.length) parts.push(`${disasters.length} active natural-disaster events in the picture.`)
+  if (disasters.length)
+    parts.push(`${disasters.length} active natural-disaster events in the picture.`)
 
   const sevSpace = [...space].sort((a, b) => b.severity - a.severity)[0]
   if (sevSpace && sevSpace.severity >= 55) parts.push(`Elevated space weather: ${sevSpace.title}.`)
 
-  const topRisk = risk.slice(0, 3).map((r) => `${r.name} (${r.score})`).join(', ')
+  const topRisk = risk
+    .slice(0, 3)
+    .map((r) => `${r.name} (${r.score})`)
+    .join(', ')
   if (topRisk) parts.push(`Highest instability posture: ${topRisk}.`)
 
   if (markets.length) {

@@ -16,12 +16,16 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   const w = 100
   const h = 24
   const max = Math.max(100, ...data)
-  const pts = data
-    .map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * h}`)
-    .join(' ')
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * h}`).join(' ')
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-6">
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+      <polyline
+        points={pts}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        vectorEffect="non-scaling-stroke"
+      />
     </svg>
   )
 }
@@ -72,7 +76,10 @@ export default function ThreatPanel() {
               strokeWidth="7"
               strokeLinecap="round"
               strokeDasharray={`${dash} ${circ}`}
-              style={{ filter: `drop-shadow(0 0 6px ${color})`, transition: 'stroke-dasharray .6s' }}
+              style={{
+                filter: `drop-shadow(0 0 6px ${color})`,
+                transition: 'stroke-dasharray .6s',
+              }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">

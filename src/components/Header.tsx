@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Activity, Bell, Command, Pause, Play, Radio } from 'lucide-react'
+import { Activity, Bell, Command, HelpCircle, Pause, Play, Radio } from 'lucide-react'
 import { useStore } from '../store'
 import { utcClock, utcDate } from '../utils'
+import ExportMenu from './ExportMenu'
 
 const LEVEL_COLOR: Record<number, string> = {
   1: '#34d399',
@@ -22,6 +23,7 @@ export default function Header() {
   const clearAlerts = useStore((s) => s.clearAlerts)
   const viewMode = useStore((s) => s.viewMode)
   const setViewMode = useStore((s) => s.setViewMode)
+  const setHelpOpen = useStore((s) => s.setHelpOpen)
 
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 1000)
@@ -112,11 +114,19 @@ export default function Header() {
             {paused ? <Play size={12} /> : <Pause size={12} />}
             {paused ? 'PAUSED' : 'LIVE'}
           </button>
+          <ExportMenu />
           <button
             onClick={() => setCommandOpen(true)}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cmd-border hover:border-cmd-accent/60 font-mono text-[11px] text-cmd-dim hover:text-cmd-text transition-colors"
           >
             <Command size={12} /> ⌘K
+          </button>
+          <button
+            onClick={() => setHelpOpen(true)}
+            title="Keyboard & controls (?)"
+            className="flex items-center px-2 py-1 rounded border border-cmd-border hover:border-cmd-accent/60 text-cmd-dim hover:text-cmd-text transition-colors"
+          >
+            <HelpCircle size={13} />
           </button>
         </div>
       </div>

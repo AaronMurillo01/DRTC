@@ -24,16 +24,24 @@ export default function AlertsOverlay() {
               <AlertTriangle size={15} className="text-cmd-red shrink-0 mt-0.5 animate-flicker" />
               <button onClick={() => select(a.eventId)} className="flex-1 min-w-0 text-left">
                 <div className="flex items-center gap-2">
-                  <span className="stat-chip" style={{ color: meta.color, borderColor: meta.color + '55' }}>
+                  <span
+                    className="stat-chip"
+                    style={{ color: meta.color, borderColor: meta.color + '55' }}
+                  >
                     {meta.short}
                   </span>
-                  <span className="font-mono text-[9px] text-cmd-red">CRITICAL · SEV {a.severity}</span>
+                  <span className="font-mono text-[9px] text-cmd-red">
+                    CRITICAL · SEV {a.severity}
+                  </span>
                   <span className="font-mono text-[8px] text-cmd-dim ml-auto">{timeAgo(a.ts)}</span>
                 </div>
                 <div className="text-[11px] text-cmd-text font-medium mt-1 truncate">{a.title}</div>
                 <div className="text-[10px] text-cmd-dim truncate">{a.summary}</div>
               </button>
-              <button onClick={() => dismiss(a.id)} className="text-cmd-dim hover:text-cmd-text shrink-0">
+              <button
+                onClick={() => dismiss(a.id)}
+                className="text-cmd-dim hover:text-cmd-text shrink-0"
+              >
                 <X size={13} />
               </button>
             </div>

@@ -38,7 +38,10 @@ export default function IntelFeed() {
             className="flex-1 bg-transparent outline-none font-mono text-[11px] text-cmd-text placeholder:text-cmd-dim min-w-0"
           />
           {query && (
-            <button onClick={() => setQuery('')} className="text-cmd-dim hover:text-cmd-text font-mono text-[10px]">
+            <button
+              onClick={() => setQuery('')}
+              className="text-cmd-dim hover:text-cmd-text font-mono text-[10px]"
+            >
               ✕
             </button>
           )}
@@ -54,7 +57,9 @@ export default function IntelFeed() {
             onChange={(e) => setMinSeverity(Number(e.target.value))}
             className="flex-1 accent-cmd-accent h-1"
           />
-          <span className="font-mono text-[10px] text-cmd-text w-6 text-right shrink-0">{minSeverity}</span>
+          <span className="font-mono text-[10px] text-cmd-text w-6 text-right shrink-0">
+            {minSeverity}
+          </span>
         </div>
       </div>
       <div className="overflow-y-auto flex-1 min-h-0">

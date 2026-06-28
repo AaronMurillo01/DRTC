@@ -43,6 +43,12 @@ export interface FeedSource {
   lastSync: number | null
   count: number
   latencyMs: number | null
+  /** rolling latency samples for the health sparkline */
+  latencyHistory: number[]
+  /** consecutive failures — drives the circuit breaker backoff */
+  consecutiveFailures: number
+  /** total successful syncs since boot */
+  syncs: number
   error?: string
 }
 
