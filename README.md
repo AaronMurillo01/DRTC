@@ -47,6 +47,16 @@ You also get a live MGRS and lat/lon readout under the cursor, a time range
 filter (1h, 6h, 24h, 48h, 7d, ALL), a layer panel, and great circle arcs that
 connect the most unstable country to the events driving its score.
 
+## Works on any screen
+
+The layout adapts from a three column command wall on desktop down to a single
+scrolling column on phones, with the map leading and the panels stacked below.
+The header trims itself as space gets tight so the important controls always fit.
+
+| Tablet | Phone |
+| --- | --- |
+| ![Tablet](docs/tablet.png) | ![Phone](docs/mobile.png) |
+
 ## Data sources
 
 Everything here is free and needs no key.

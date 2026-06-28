@@ -35,29 +35,31 @@ export default function Header() {
   const color = LEVEL_COLOR[threat.level]
 
   return (
-    <header className="shrink-0 h-16 flex items-center justify-between px-5 border-b border-cmd-border/70 bg-gradient-to-b from-cmd-panel2/80 to-cmd-panel/60 backdrop-blur">
+    <header className="shrink-0 h-16 flex items-center justify-between px-3 sm:px-5 border-b border-cmd-border/70 bg-gradient-to-b from-cmd-panel2/80 to-cmd-panel/60 backdrop-blur">
       {/* Brand */}
-      <div className="flex items-center gap-3.5">
-        <div className="relative">
+      <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+        <div className="relative shrink-0">
           <div className="w-9 h-9 rounded-lg border border-cmd-accent/40 bg-cmd-accent/5 flex items-center justify-center shadow-glow">
             <Radio size={17} className="text-cmd-accent" />
           </div>
           <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cmd-green ring-2 ring-cmd-bg animate-flicker" />
         </div>
-        <div className="leading-tight">
+        <div className="leading-tight min-w-0">
           <div className="font-mono font-bold tracking-[0.28em] text-cmd-text text-[15px]">
             DRTC
           </div>
-          <div className="font-mono text-[8.5px] text-cmd-dim tracking-[0.2em] uppercase">
+          <div className="hidden sm:block font-mono text-[8.5px] text-cmd-dim tracking-[0.2em] uppercase truncate">
             Distributed Real-Time Command &amp; Control
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-3 sm:gap-5">
         {/* Threat condition */}
-        <div className="flex items-center gap-2.5">
-          <span className="font-mono text-[9px] text-cmd-dim tracking-[0.2em]">CONDITION</span>
+        <div className="hidden lg:flex items-center gap-2.5">
+          <span className="hidden xl:inline font-mono text-[9px] text-cmd-dim tracking-[0.2em]">
+            CONDITION
+          </span>
           <div
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono"
             style={{
@@ -75,7 +77,7 @@ export default function Header() {
         </div>
 
         {/* Clock */}
-        <div className="text-right leading-tight font-mono border-l border-cmd-border/70 pl-5">
+        <div className="hidden lg:block text-right leading-tight font-mono border-l border-cmd-border/70 pl-5">
           <div className="text-cmd-text text-sm tracking-[0.15em] tabular-nums">
             {utcClock(now)}
           </div>
@@ -83,7 +85,7 @@ export default function Header() {
         </div>
 
         {/* Feed health */}
-        <div className="flex items-center gap-1.5 font-mono text-[11px]">
+        <div className="hidden lg:flex items-center gap-1.5 font-mono text-[11px]">
           <span
             className={`w-1.5 h-1.5 rounded-full ${online === total ? 'bg-cmd-green' : online === 0 ? 'bg-cmd-red' : 'bg-cmd-amber'}`}
           />
@@ -92,7 +94,7 @@ export default function Header() {
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-2 border-l border-cmd-border/70 pl-5">
+        <div className="flex items-center gap-1.5 sm:gap-2 border-l border-cmd-border/70 pl-3 sm:pl-5">
           {/* view toggle */}
           <div className="flex items-center p-0.5 rounded-lg border border-cmd-border/80 bg-cmd-bg/40">
             {(
@@ -122,7 +124,7 @@ export default function Header() {
           <button
             onClick={clearAlerts}
             title={alerts.length ? 'Clear alerts' : 'No active alerts'}
-            className="ctl relative !px-2"
+            className="ctl relative !px-2 hidden sm:flex"
           >
             <Bell size={13} className={alerts.length ? 'text-cmd-red' : ''} />
             {alerts.length > 0 && (
@@ -135,22 +137,24 @@ export default function Header() {
           <button
             onClick={togglePause}
             title={paused ? 'Resume feeds' : 'Pause feeds'}
-            className="ctl"
+            className="ctl hidden sm:flex"
           >
             {paused ? <Play size={12} /> : <Pause size={12} />}
             {paused ? 'PAUSED' : 'LIVE'}
           </button>
 
-          <ExportMenu />
+          <span className="hidden lg:block">
+            <ExportMenu />
+          </span>
 
-          <button onClick={() => setCommandOpen(true)} className="ctl">
-            <Command size={12} /> ⌘K
+          <button onClick={() => setCommandOpen(true)} title="Command palette" className="ctl">
+            <Command size={12} /> <span className="hidden sm:inline">⌘K</span>
           </button>
 
           <button
             onClick={() => setHelpOpen(true)}
             title="Keyboard & controls (?)"
-            className="ctl !px-2"
+            className="ctl !px-2 hidden sm:flex"
           >
             <HelpCircle size={13} />
           </button>

@@ -536,7 +536,7 @@ export default function MapView() {
         })}
       </div>
 
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 panel bg-cmd-panel/90 backdrop-blur px-3 py-1 flex items-center gap-3 font-mono text-[10px]">
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 panel bg-cmd-panel/90 backdrop-blur px-3 py-1 hidden md:flex items-center gap-3 font-mono text-[10px]">
         <span className="text-cmd-dim">MGRS</span>
         <span className="text-cmd-accent w-44 text-center">{coord ? coord.mgrs : '——'}</span>
         <span className="text-cmd-border">|</span>

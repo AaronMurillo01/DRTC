@@ -63,11 +63,11 @@ export default function App() {
   }, [setCommandOpen, setHelpOpen, togglePause, setViewMode, select])
 
   return (
-    <div className="h-full w-full flex flex-col bg-cmd-bg text-cmd-text overflow-hidden">
+    <div className="h-full w-full flex flex-col bg-cmd-bg text-cmd-text overflow-y-auto lg:overflow-hidden">
       <Header />
-      <main className="flex-1 min-h-0 grid grid-cols-[336px_1fr_344px] gap-2.5 p-2.5">
+      <main className="flex flex-col gap-2.5 p-2.5 lg:flex-1 lg:min-h-0 lg:grid lg:grid-cols-[320px_1fr_330px] xl:grid-cols-[336px_1fr_344px]">
         {/* Left column — live intel stream + system health */}
-        <div className="flex flex-col gap-2 min-h-0">
+        <div className="order-2 lg:order-none flex flex-col gap-2.5 min-h-0">
           <ErrorBoundary label="INTEL FEED">
             <IntelFeed />
           </ErrorBoundary>
@@ -77,7 +77,7 @@ export default function App() {
         </div>
 
         {/* Center — tactical map / globe */}
-        <div className="relative min-h-0 panel overflow-hidden cmd-grid">
+        <div className="order-1 lg:order-none relative h-[58vh] min-h-[380px] lg:h-auto lg:min-h-0 panel overflow-hidden cmd-grid">
           <ErrorBoundary label="MAP ENGINE">
             <Suspense
               fallback={
@@ -96,7 +96,7 @@ export default function App() {
         </div>
 
         {/* Right column — threat + instability + markets */}
-        <div className="flex flex-col gap-2 min-h-0">
+        <div className="order-3 lg:order-none flex flex-col gap-2.5 min-h-0">
           <ErrorBoundary label="THREAT">
             <ThreatPanel />
           </ErrorBoundary>
