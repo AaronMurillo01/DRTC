@@ -11,9 +11,25 @@ const RING_COLOR: Record<number, string> = {
   5: '#f87171',
 }
 
+function Sparkline({ data, color }: { data: number[]; color: string }) {
+  if (data.length < 2) return null
+  const w = 100
+  const h = 24
+  const max = Math.max(100, ...data)
+  const pts = data
+    .map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * h}`)
+    .join(' ')
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-6">
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+    </svg>
+  )
+}
+
 export default function ThreatPanel() {
   const threat = useStore((s) => s.threat)
   const events = useStore((s) => s.events)
+  const history = useStore((s) => s.threatHistory)
   const color = RING_COLOR[threat.level]
 
   const breakdown = useMemo(() => {
@@ -84,6 +100,13 @@ export default function ThreatPanel() {
             })}
           </div>
         </div>
+      </div>
+      <div className="px-3 pb-2 -mt-1">
+        <div className="flex items-center justify-between font-mono text-[8px] text-cmd-dim mb-0.5">
+          <span>INDEX HISTORY</span>
+          <span>{history.length} pts</span>
+        </div>
+        <Sparkline data={history} color={color} />
       </div>
     </div>
   )

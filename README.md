@@ -18,20 +18,32 @@ command-and-control aesthetic and a correlation engine on top of the raw feeds.
 - **Tactical 3D globe** (`react-globe.gl` / Three.js) plotting every located
   event in real time — point size & altitude scale with severity, high-severity
   tracks emit animated pulse rings, click any track to fly the camera to it.
+- **Country instability markers + correlation arcs** — Tier-1 watch nations are
+  plotted on the globe colored by their live instability score, with animated
+  arcs linking the most unstable country to the high-severity tracks driving it.
 - **Live Intel Stream** — a unified, severity-ranked feed of all events with
-  source tags, severity bars, and age, normalized from six independent sources.
+  source tags, severity bars, and age, plus **full-text search** and a
+  **minimum-severity slider** that filter both the list and the globe.
 - **Global Threat Index + 5-tier Condition** (`NOMINAL → CRITICAL`) — a
   correlation engine scores the whole event stream and shows a live gauge with
-  rising/falling trend.
+  rising/falling trend and a rolling **index-history sparkline**.
 - **DRTC Instability Index (CII)** — a proximity-weighted stress score for 20
   Tier-1 nations, combining a geopolitical baseline with nearby live events and
   surfacing the top drivers per country.
+- **SITREP overlay** — a deterministic, rule-based intelligence brief
+  synthesized live from the picture (no LLM, no keys).
+- **Live alerts** — new severity ≥ 85 tracks raise dismissable toast alerts and
+  a header badge; click an alert to jump to the track. A warm-up pass prevents
+  the first historical batch from flooding the log.
 - **Markets Radar** — live crypto majors with 24h moves.
 - **Layer control & filters** — toggle any data layer from the globe legend or
   the command palette.
-- **⌘K Command Palette** — keyboard-driven control of layers, focus, and feeds.
+- **⌘K Command Palette** — keyboard-driven control of layers, focus, alerts,
+  filters, and feeds.
 - **Feed Integrity panel** — per-source health, latency, and last-sync, with
   graceful degraded/offline states.
+- **Persisted preferences** — active layers and severity floor are saved to
+  `localStorage` and restored on reload.
 - **Pause/Resume**, live UTC clock, and a scrolling priority-event ticker.
 
 ## Improvements over the original
@@ -108,10 +120,9 @@ Add a new layer in three steps:
 ## Roadmap
 
 - Cyber & aviation (OpenSky ADS-B) layers
-- Arc/connection overlays for cross-event correlations
-- Local LLM brief synthesis (Ollama/WebLLM) of the current picture
+- Optional local-LLM SITREP synthesis (Ollama/WebLLM) on top of the rule-based brief
 - PWA offline shell + desktop packaging
-- Persisted layouts and saved watch lists
+- Saved watch lists and custom layouts
 
 ## License
 

@@ -1,6 +1,6 @@
 // DRTC correlation engine: turns the raw event stream into a Global Threat
 // Index, a 5-tier condition level, and a per-country Instability Index.
-import type { CountryRisk, IntelEvent, ThreatState } from '../types'
+import type { CountryRisk, IntelEvent, MarketTick, ThreatState } from '../types'
 
 // Tier-1 watch list with a baseline geopolitical stress weight (0-40).
 const WATCH: { iso: string; name: string; lat: number; lng: number; base: number }[] = [
@@ -98,4 +98,46 @@ export function computeThreat(events: IntelEvent[], prevIndex?: number): ThreatS
     else if (index < prevIndex - 1) trend = 'down'
   }
   return { level: tier.level, label: tier.label, index, trend }
+}
+
+// Rule-based situational synthesis — a deterministic "intelligence brief"
+// generated from the live picture (no LLM / no keys required).
+export function buildBrief(
+  events: IntelEvent[],
+  threat: ThreatState,
+  risk: CountryRisk[],
+  markets: MarketTick[],
+): string {
+  if (!events.length) return 'Awaiting feed acquisition. No tracks in the common operating picture yet.'
+
+  const by = (c: string) => events.filter((e) => e.category === c)
+  const seismic = by('seismic')
+  const disasters = by('disaster')
+  const space = by('space')
+  const signals = by('signals')
+
+  const parts: string[] = []
+  parts.push(`Condition ${threat.level} (${threat.label}); Global Threat Index ${threat.index}/100, trend ${threat.trend}.`)
+
+  const topHot = [...signals].sort((a, b) => b.severity - a.severity)[0]
+  if (topHot) parts.push(`Media/crisis attention concentrating on ${topHot.title}.`)
+
+  const bigQuake = [...seismic].sort((a, b) => b.severity - a.severity)[0]
+  if (bigQuake) parts.push(`${seismic.length} seismic events tracked; strongest ${bigQuake.title} near ${bigQuake.region ?? 'unknown'}.`)
+
+  if (disasters.length) parts.push(`${disasters.length} active natural-disaster events in the picture.`)
+
+  const sevSpace = [...space].sort((a, b) => b.severity - a.severity)[0]
+  if (sevSpace && sevSpace.severity >= 55) parts.push(`Elevated space weather: ${sevSpace.title}.`)
+
+  const topRisk = risk.slice(0, 3).map((r) => `${r.name} (${r.score})`).join(', ')
+  if (topRisk) parts.push(`Highest instability posture: ${topRisk}.`)
+
+  if (markets.length) {
+    const up = markets.filter((m) => m.changePct >= 0).length
+    const tone = up > markets.length / 2 ? 'risk-on' : 'risk-off'
+    parts.push(`Markets ${tone} (${up}/${markets.length} majors up).`)
+  }
+
+  return parts.join(' ')
 }

@@ -11,6 +11,8 @@ import SourceStatus from './components/SourceStatus'
 import StatusBar from './components/StatusBar'
 import CommandPalette from './components/CommandPalette'
 import EventDetail from './components/EventDetail'
+import BriefOverlay from './components/BriefOverlay'
+import AlertsOverlay from './components/AlertsOverlay'
 
 export default function App() {
   useFeeds()
@@ -43,6 +45,7 @@ export default function App() {
         {/* Center — tactical globe */}
         <div className="relative min-h-0 panel overflow-hidden cmd-grid">
           <GlobeView />
+          <BriefOverlay />
           <EventDetail />
         </div>
 
@@ -54,6 +57,7 @@ export default function App() {
         </div>
       </main>
       <StatusBar />
+      <AlertsOverlay />
       <CommandPalette />
     </div>
   )

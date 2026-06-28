@@ -50,6 +50,18 @@ export default function CommandPalette() {
         },
       },
       { id: 'clear', label: 'Clear selection', hint: 'NAV', run: () => select(null) },
+      {
+        id: 'clear-alerts',
+        label: 'Clear all alerts',
+        hint: 'SYSTEM',
+        run: () => useStore.getState().clearAlerts(),
+      },
+      {
+        id: 'reset-sev',
+        label: 'Reset severity filter',
+        hint: 'FILTER',
+        run: () => useStore.getState().setMinSeverity(0),
+      },
       ...layerCmds,
     ]
   }, [active, paused, toggleCategory, togglePause, select])

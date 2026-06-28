@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, Search } from 'lucide-react'
 import { CATEGORY_META, useStore, visibleEvents } from '../store'
 import { timeAgo } from '../utils'
 
@@ -7,14 +7,55 @@ export default function IntelFeed() {
   const events = useStore(visibleEvents)
   const select = useStore((s) => s.select)
   const selectedId = useStore((s) => s.selectedId)
+  const query = useStore((s) => s.query)
+  const setQuery = useStore((s) => s.setQuery)
+  const minSeverity = useStore((s) => s.minSeverity)
+  const setMinSeverity = useStore((s) => s.setMinSeverity)
 
-  const feed = useMemo(() => events.slice(0, 80), [events])
+  const feed = useMemo(() => {
+    const q = query.toLowerCase().trim()
+    const filtered = q
+      ? events.filter((e) =>
+          `${e.title} ${e.summary} ${e.region ?? ''} ${e.source}`.toLowerCase().includes(q),
+        )
+      : events
+    return filtered.slice(0, 80)
+  }, [events, query])
 
   return (
     <div className="panel flex-1">
       <div className="panel-header">
         <span>◢ Intel Stream</span>
-        <span className="text-cmd-accent">{events.length} TRACKS</span>
+        <span className="text-cmd-accent">{feed.length} TRACKS</span>
+      </div>
+      <div className="px-2 py-1.5 border-b border-cmd-border space-y-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 bg-cmd-panel2/60 rounded px-2 py-1 border border-cmd-border/50">
+          <Search size={11} className="text-cmd-dim shrink-0" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filter tracks…"
+            className="flex-1 bg-transparent outline-none font-mono text-[11px] text-cmd-text placeholder:text-cmd-dim min-w-0"
+          />
+          {query && (
+            <button onClick={() => setQuery('')} className="text-cmd-dim hover:text-cmd-text font-mono text-[10px]">
+              ✕
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[9px] text-cmd-dim tracking-wider shrink-0">MIN SEV</span>
+          <input
+            type="range"
+            min={0}
+            max={90}
+            step={5}
+            value={minSeverity}
+            onChange={(e) => setMinSeverity(Number(e.target.value))}
+            className="flex-1 accent-cmd-accent h-1"
+          />
+          <span className="font-mono text-[10px] text-cmd-text w-6 text-right shrink-0">{minSeverity}</span>
+        </div>
       </div>
       <div className="overflow-y-auto flex-1 min-h-0">
         {feed.length === 0 && (

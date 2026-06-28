@@ -1,7 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Globe from 'react-globe.gl'
 import { CATEGORY_META, useStore, visibleEvents } from '../store'
-import type { IntelEvent } from '../types'
+import type { CountryRisk, IntelEvent } from '../types'
+
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371
+  const dLat = ((bLat - aLat) * Math.PI) / 180
+  const dLng = ((bLng - aLng) * Math.PI) / 180
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)))
+}
+
+function riskColor(score: number): string {
+  if (score >= 75) return '#f87171'
+  if (score >= 55) return '#fb923c'
+  if (score >= 38) return '#fbbf24'
+  return '#34d399'
+}
+
+function countryTooltip(c: CountryRisk): string {
+  const col = riskColor(c.score)
+  return `
+    <div style="font-family:'JetBrains Mono',monospace;background:#0a0e14;border:1px solid ${col};
+      border-radius:6px;padding:7px 10px;color:#c7d3df;box-shadow:0 0 16px ${col}44">
+      <div style="font-size:11px;font-weight:700">${c.name} · CII ${c.score}</div>
+      <div style="font-size:9px;color:#5c6b7a;text-transform:uppercase">${c.drivers.join(' · ')}</div>
+    </div>`
+}
 
 export default function GlobeView() {
   const globeRef = useRef<any>(null)
@@ -9,6 +36,7 @@ export default function GlobeView() {
   const [dims, setDims] = useState({ w: 600, h: 600 })
 
   const events = useStore(visibleEvents)
+  const countryRisk = useStore((s) => s.countryRisk)
   const select = useStore((s) => s.select)
   const selectedId = useStore((s) => s.selectedId)
 
@@ -20,6 +48,26 @@ export default function GlobeView() {
     () => located.filter((e) => e.severity >= 65 || e.category === 'orbital'),
     [located],
   )
+
+  // Correlation arcs: link the most unstable watch-country to the nearby
+  // high-severity live tracks that are driving its score.
+  const arcs = useMemo(() => {
+    const top = countryRisk[0]
+    if (!top) return []
+    return located
+      .filter((e) => e.category !== 'orbital' && e.severity >= 60)
+      .map((e) => ({ e, d: haversineKm(top.lat, top.lng, e.lat!, e.lng!) }))
+      .filter((x) => x.d <= 1600)
+      .sort((a, b) => b.e.severity - a.e.severity)
+      .slice(0, 14)
+      .map((x) => ({
+        startLat: x.e.lat!,
+        startLng: x.e.lng!,
+        endLat: top.lat,
+        endLng: top.lng,
+        color: CATEGORY_META[x.e.category].color,
+      }))
+  }, [countryRisk, located])
 
   // Responsive sizing.
   useEffect(() => {
@@ -87,6 +135,26 @@ export default function GlobeView() {
         ringMaxRadius={(d: object) => 2 + ((d as IntelEvent).severity / 100) * 4}
         ringPropagationSpeed={1.4}
         ringRepeatPeriod={(d: object) => 1600 - ((d as IntelEvent).severity / 100) * 900}
+        labelsData={countryRisk}
+        labelLat={(d: object) => (d as CountryRisk).lat}
+        labelLng={(d: object) => (d as CountryRisk).lng}
+        labelText={(d: object) => (d as CountryRisk).iso}
+        labelColor={(d: object) => riskColor((d as CountryRisk).score)}
+        labelSize={(d: object) => 0.6 + ((d as CountryRisk).score / 100) * 0.9}
+        labelDotRadius={(d: object) => 0.25 + ((d as CountryRisk).score / 100) * 0.55}
+        labelResolution={2}
+        labelLabel={(d: object) => countryTooltip(d as CountryRisk)}
+        onLabelClick={(d: object) => {
+          const c = d as CountryRisk
+          globeRef.current?.pointOfView({ lat: c.lat, lng: c.lng, altitude: 1.8 }, 900)
+        }}
+        arcsData={arcs}
+        arcColor={(d: object) => (d as { color: string }).color}
+        arcStroke={0.4}
+        arcDashLength={0.5}
+        arcDashGap={0.25}
+        arcDashAnimateTime={1800}
+        arcAltitudeAutoScale={0.4}
       />
       <Legend />
     </div>

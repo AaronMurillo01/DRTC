@@ -57,6 +57,16 @@ export interface CountryRisk {
   drivers: string[]
 }
 
+export interface Alert {
+  id: string
+  title: string
+  summary: string
+  category: EventCategory
+  severity: number
+  ts: number
+  eventId: string
+}
+
 export type ThreatLevel = 1 | 2 | 3 | 4 | 5
 
 export interface ThreatState {

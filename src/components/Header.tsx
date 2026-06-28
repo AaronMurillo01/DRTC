@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Activity, Command, Pause, Play, Radio } from 'lucide-react'
+import { Activity, Bell, Command, Pause, Play, Radio } from 'lucide-react'
 import { useStore } from '../store'
 import { utcClock, utcDate } from '../utils'
 
@@ -18,6 +18,8 @@ export default function Header() {
   const togglePause = useStore((s) => s.togglePause)
   const setCommandOpen = useStore((s) => s.setCommandOpen)
   const sources = useStore((s) => s.sources)
+  const alerts = useStore((s) => s.alerts)
+  const clearAlerts = useStore((s) => s.clearAlerts)
 
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 1000)
@@ -74,6 +76,18 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={clearAlerts}
+            title={alerts.length ? 'Clear alerts' : 'No active alerts'}
+            className="relative flex items-center px-2.5 py-1 rounded border border-cmd-border hover:border-cmd-red/60 text-cmd-dim hover:text-cmd-text transition-colors"
+          >
+            <Bell size={13} className={alerts.length ? 'text-cmd-red' : ''} />
+            {alerts.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-cmd-red text-cmd-bg font-mono text-[8px] font-bold flex items-center justify-center">
+                {alerts.length > 99 ? '99+' : alerts.length}
+              </span>
+            )}
+          </button>
           <button
             onClick={togglePause}
             title={paused ? 'Resume feeds (Space)' : 'Pause feeds (Space)'}
