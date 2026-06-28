@@ -156,7 +156,6 @@ export default function GlobeView() {
         arcDashAnimateTime={1800}
         arcAltitudeAutoScale={0.4}
       />
-      <Legend />
     </div>
   )
 }
@@ -178,28 +177,3 @@ function escapeHtml(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
 }
 
-function Legend() {
-  const active = useStore((s) => s.activeCategories)
-  const toggle = useStore((s) => s.toggleCategory)
-  const cats = Object.entries(CATEGORY_META).filter(([k]) =>
-    ['seismic', 'disaster', 'space', 'orbital', 'signals'].includes(k),
-  )
-  return (
-    <div className="absolute bottom-2 left-2 flex flex-wrap gap-1.5 max-w-[60%]">
-      {cats.map(([key, meta]) => {
-        const on = active.has(key as never)
-        return (
-          <button
-            key={key}
-            onClick={() => toggle(key as never)}
-            className="flex items-center gap-1.5 px-2 py-1 rounded border bg-cmd-panel/80 backdrop-blur font-mono text-[9px] uppercase tracking-wider transition-opacity"
-            style={{ borderColor: meta.color + '55', opacity: on ? 1 : 0.35 }}
-          >
-            <span className="w-2 h-2 rounded-full" style={{ background: meta.color }} />
-            <span style={{ color: meta.color }}>{meta.short}</span>
-          </button>
-        )
-      })}
-    </div>
-  )
-}

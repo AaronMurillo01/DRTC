@@ -7,6 +7,8 @@ import type {
   IntelEvent,
   MarketTick,
   ThreatState,
+  TimeRangeKey,
+  ViewMode,
 } from './types'
 import { buildBrief, computeCountryRisk, computeThreat } from './services/threat'
 
@@ -21,7 +23,22 @@ export const CATEGORY_META: Record<
   market: { label: 'Markets', color: '#34d399', short: 'MKT' },
   cyber: { label: 'Cyber', color: '#60a5fa', short: 'CYBR' },
   signals: { label: 'Signals', color: '#34d399', short: 'SIG' },
+  spaceport: { label: 'Spaceports', color: '#a78bfa', short: 'SPRT' },
+  nuclear: { label: 'Nuclear Sites', color: '#facc15', short: 'NUKE' },
 }
+
+// Persistent reference layers — exempt from the time filter and the intel feed.
+export const STATIC_CATEGORIES = new Set<EventCategory>(['spaceport', 'nuclear'])
+const TIME_EXEMPT = new Set<EventCategory>(['orbital', 'spaceport', 'nuclear'])
+
+export const TIME_RANGES: { key: TimeRangeKey; label: string; ms: number }[] = [
+  { key: '1h', label: '1h', ms: 3_600_000 },
+  { key: '6h', label: '6h', ms: 6 * 3_600_000 },
+  { key: '24h', label: '24h', ms: 24 * 3_600_000 },
+  { key: '48h', label: '48h', ms: 48 * 3_600_000 },
+  { key: '7d', label: '7d', ms: 7 * 24 * 3_600_000 },
+  { key: 'all', label: 'ALL', ms: Infinity },
+]
 
 const ALERT_THRESHOLD = 85
 const PREFS_KEY = 'drtc.prefs.v1'
@@ -30,6 +47,8 @@ const PREFS_KEY = 'drtc.prefs.v1'
 interface Prefs {
   activeCategories: EventCategory[]
   minSeverity: number
+  viewMode: ViewMode
+  timeRange: TimeRangeKey
 }
 function loadPrefs(): Prefs | null {
   try {
@@ -64,6 +83,8 @@ interface DRTCState {
   activeCategories: Set<EventCategory>
   minSeverity: number
   query: string
+  viewMode: ViewMode
+  timeRange: TimeRangeKey
   paused: boolean
   commandOpen: boolean
   lastTick: number
@@ -76,6 +97,8 @@ interface DRTCState {
   toggleCategory: (cat: EventCategory) => void
   setMinSeverity: (v: number) => void
   setQuery: (q: string) => void
+  setViewMode: (m: ViewMode) => void
+  setTimeRange: (t: TimeRangeKey) => void
   togglePause: () => void
   setCommandOpen: (open: boolean) => void
   dismissAlert: (id: string) => void
@@ -89,6 +112,8 @@ const INITIAL_SOURCES: FeedSource[] = [
   { id: 'orbital', label: 'ISS Telemetry', category: 'orbital', status: 'pending', lastSync: null, count: 0, latencyMs: null },
   { id: 'signals', label: 'GDELT Signals', category: 'signals', status: 'pending', lastSync: null, count: 0, latencyMs: null },
   { id: 'market', label: 'Markets Radar', category: 'market', status: 'pending', lastSync: null, count: 0, latencyMs: null },
+  { id: 'spaceport', label: 'Spaceports', category: 'spaceport', status: 'pending', lastSync: null, count: 0, latencyMs: null },
+  { id: 'nuclear', label: 'Nuclear Sites', category: 'nuclear', status: 'pending', lastSync: null, count: 0, latencyMs: null },
 ]
 
 const prefs = loadPrefs()
@@ -107,6 +132,8 @@ export const useStore = create<DRTCState>((set) => ({
   activeCategories: new Set<EventCategory>(prefs?.activeCategories ?? DEFAULT_CATS),
   minSeverity: prefs?.minSeverity ?? 0,
   query: '',
+  viewMode: prefs?.viewMode ?? '2d',
+  timeRange: prefs?.timeRange ?? '7d',
   paused: false,
   commandOpen: false,
   lastTick: 0,
@@ -163,17 +190,28 @@ export const useStore = create<DRTCState>((set) => ({
     set((s) => {
       const next = new Set(s.activeCategories)
       next.has(cat) ? next.delete(cat) : next.add(cat)
-      savePrefs({ activeCategories: [...next], minSeverity: s.minSeverity })
-      return { activeCategories: next }
+      const patch = { activeCategories: next }
+      savePrefs(prefsOf(s, patch))
+      return patch
     }),
 
   setMinSeverity: (v) =>
     set((s) => {
-      savePrefs({ activeCategories: [...s.activeCategories], minSeverity: v })
+      savePrefs(prefsOf(s, { minSeverity: v }))
       return { minSeverity: v }
     }),
 
   setQuery: (q) => set({ query: q }),
+  setViewMode: (m) =>
+    set((s) => {
+      savePrefs(prefsOf(s, { viewMode: m }))
+      return { viewMode: m }
+    }),
+  setTimeRange: (t) =>
+    set((s) => {
+      savePrefs(prefsOf(s, { timeRange: t }))
+      return { timeRange: t }
+    }),
   togglePause: () => set((s) => ({ paused: !s.paused })),
   setCommandOpen: (open) => set({ commandOpen: open }),
   dismissAlert: (id) => set((s) => ({ alerts: s.alerts.filter((a) => a.id !== id) })),
@@ -185,10 +223,29 @@ function srcOf(e: IntelEvent): string | undefined {
   return (e as IntelEvent & { __src?: string }).__src
 }
 
-// Globe + feed share this filtered view (category + severity floor).
-export const visibleEvents = (s: DRTCState): IntelEvent[] =>
-  s.events.filter(
-    (e) =>
-      s.activeCategories.has(e.category) &&
-      (e.category === 'orbital' || e.severity >= s.minSeverity),
-  )
+// Build a Prefs snapshot from current state + a patch (for persistence).
+function prefsOf(s: DRTCState, patch: Partial<DRTCState>): Prefs {
+  const cats = (patch.activeCategories ?? s.activeCategories) as Set<EventCategory>
+  return {
+    activeCategories: [...cats],
+    minSeverity: patch.minSeverity ?? s.minSeverity,
+    viewMode: patch.viewMode ?? s.viewMode,
+    timeRange: patch.timeRange ?? s.timeRange,
+  }
+}
+
+// Map + globe share this filtered view (category + severity + time window).
+export const visibleEvents = (s: DRTCState): IntelEvent[] => {
+  const range = TIME_RANGES.find((r) => r.key === s.timeRange)!.ms
+  const cutoff = Date.now() - range
+  return s.events.filter((e) => {
+    if (!s.activeCategories.has(e.category)) return false
+    if (TIME_EXEMPT.has(e.category)) return true
+    if (e.severity < s.minSeverity) return false
+    return e.timestamp >= cutoff
+  })
+}
+
+// Intel feed excludes static reference layers (spaceports / nuclear sites).
+export const feedEvents = (s: DRTCState): IntelEvent[] =>
+  visibleEvents(s).filter((e) => !STATIC_CATEGORIES.has(e.category))

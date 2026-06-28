@@ -1,8 +1,13 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { useFeeds } from './hooks/useFeeds'
 import { useStore } from './store'
 import Header from './components/Header'
-import GlobeView from './components/GlobeView'
+import TimeRange from './components/TimeRange'
+
+// Lazy-loaded so the heavy three.js / maplibre bundles load only when needed.
+const GlobeView = lazy(() => import('./components/GlobeView'))
+const MapView = lazy(() => import('./components/MapView'))
+import LayerLegend from './components/LayerLegend'
 import IntelFeed from './components/IntelFeed'
 import ThreatPanel from './components/ThreatPanel'
 import InstabilityPanel from './components/InstabilityPanel'
@@ -18,6 +23,7 @@ export default function App() {
   useFeeds()
   const setCommandOpen = useStore((s) => s.setCommandOpen)
   const togglePause = useStore((s) => s.togglePause)
+  const viewMode = useStore((s) => s.viewMode)
 
   // Global hotkeys: ⌘K / Ctrl-K command palette, Space pause.
   useEffect(() => {
@@ -44,7 +50,17 @@ export default function App() {
 
         {/* Center — tactical globe */}
         <div className="relative min-h-0 panel overflow-hidden cmd-grid">
-          <GlobeView />
+          <Suspense
+            fallback={
+              <div className="absolute inset-0 flex items-center justify-center font-mono text-[11px] text-cmd-dim animate-flicker">
+                ░ INITIALIZING {viewMode === '2d' ? 'MAP' : 'GLOBE'} ENGINE ░
+              </div>
+            }
+          >
+            {viewMode === '2d' ? <MapView /> : <GlobeView />}
+          </Suspense>
+          <TimeRange />
+          <LayerLegend />
           <BriefOverlay />
           <EventDetail />
         </div>

@@ -43,8 +43,13 @@ const CAT_LABEL: Record<string, string> = {
   space: 'space weather',
 }
 
+// Persistent reference layers (orbital/infrastructure) must not drive scores.
+const NON_THREAT = new Set(['orbital', 'spaceport', 'nuclear', 'market'])
+
 export function computeCountryRisk(events: IntelEvent[]): CountryRisk[] {
-  const located = events.filter((e) => e.lat != null && e.lng != null && e.category !== 'orbital')
+  const located = events.filter(
+    (e) => e.lat != null && e.lng != null && !NON_THREAT.has(e.category),
+  )
   return WATCH.map((c) => {
     let stress = c.base
     const driverCats = new Map<string, number>()
@@ -79,7 +84,8 @@ const LEVELS: { min: number; level: 1 | 2 | 3 | 4 | 5; label: string }[] = [
   { min: 0, level: 1, label: 'NOMINAL' },
 ]
 
-export function computeThreat(events: IntelEvent[], prevIndex?: number): ThreatState {
+export function computeThreat(allEvents: IntelEvent[], prevIndex?: number): ThreatState {
+  const events = allEvents.filter((e) => !NON_THREAT.has(e.category))
   if (!events.length) {
     return { level: 1, label: 'NOMINAL', index: 0, trend: 'flat' }
   }

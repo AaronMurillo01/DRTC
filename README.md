@@ -15,9 +15,19 @@ command-and-control aesthetic and a correlation engine on top of the raw feeds.
 
 ## Features
 
-- **Tactical 3D globe** (`react-globe.gl` / Three.js) plotting every located
-  event in real time — point size & altitude scale with severity, high-severity
-  tracks emit animated pulse rings, click any track to fly the camera to it.
+- **Dual map engine — 2D flat map + 3D globe**, switchable from the header:
+  - **2D WebGL map** (MapLibre GL) on a dark CARTO basemap, plotting every
+    geolocated track as a severity-scaled circle with high-alert glow, hover
+    tooltips, click-to-select, instability "zones", and zoom controls.
+  - **3D globe** (`react-globe.gl` / Three.js) with the same tracks plus
+    animated pulse rings and correlation arcs.
+  - Both engines are **lazy-loaded** — the heavy Three.js bundle only loads
+    when you switch to 3D.
+- **Time-range filter** (`1h · 6h · 24h · 48h · 7d · ALL`) scoping every live
+  layer on the map, globe, and intel feed.
+- **Layer control panel** to toggle each data layer on/off (persisted).
+- **Infrastructure reference layers** — curated Spaceports and Nuclear Power
+  Plants, excluded from threat scoring and the time filter.
 - **Country instability markers + correlation arcs** — Tier-1 watch nations are
   plotted on the globe colored by their live instability score, with animated
   arcs linking the most unstable country to the high-severity tracks driving it.
@@ -72,7 +82,9 @@ disasters every 5 min, etc.) and degrades independently if a source is down.
 
 ## Tech stack
 
-React 18 · TypeScript · Vite · Tailwind CSS · Zustand · react-globe.gl (Three.js) · lucide-react
+React 18 · TypeScript · Vite · Tailwind CSS · Zustand · MapLibre GL (2D map) · react-globe.gl / Three.js (3D globe) · lucide-react
+
+Basemap: CARTO dark tiles (free, key-less) — © OpenStreetMap © CARTO.
 
 ## Getting started
 

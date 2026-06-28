@@ -20,6 +20,8 @@ export default function Header() {
   const sources = useStore((s) => s.sources)
   const alerts = useStore((s) => s.alerts)
   const clearAlerts = useStore((s) => s.clearAlerts)
+  const viewMode = useStore((s) => s.viewMode)
+  const setViewMode = useStore((s) => s.setViewMode)
 
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 1000)
@@ -76,6 +78,20 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* 2D / 3D view toggle */}
+          <div className="flex items-center p-0.5 rounded border border-cmd-border">
+            {(['2d', '3d'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setViewMode(m)}
+                className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold tracking-wider transition-colors ${
+                  viewMode === m ? 'bg-cmd-green text-cmd-bg' : 'text-cmd-dim hover:text-cmd-text'
+                }`}
+              >
+                {m.toUpperCase()}
+              </button>
+            ))}
+          </div>
           <button
             onClick={clearAlerts}
             title={alerts.length ? 'Clear alerts' : 'No active alerts'}

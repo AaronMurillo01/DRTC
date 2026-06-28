@@ -8,6 +8,12 @@ export type EventCategory =
   | 'market'
   | 'cyber'
   | 'signals'
+  | 'spaceport'
+  | 'nuclear'
+
+export type ViewMode = '2d' | '3d'
+
+export type TimeRangeKey = '1h' | '6h' | '24h' | '48h' | '7d' | 'all'
 
 export interface IntelEvent {
   id: string
