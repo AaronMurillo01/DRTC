@@ -5,11 +5,11 @@ import { utcClock, utcDate } from '../utils'
 import ExportMenu from './ExportMenu'
 
 const LEVEL_COLOR: Record<number, string> = {
-  1: '#34d399',
-  2: '#a3e635',
-  3: '#fbbf24',
-  4: '#fb923c',
-  5: '#f87171',
+  1: '#7a818c',
+  2: '#a9863e',
+  3: '#cf9a40',
+  4: '#f4642a',
+  5: '#e2574a',
 }
 
 export default function Header() {

@@ -27,3 +27,12 @@ export function fmtPrice(n: number): string {
 export function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n))
 }
+
+// Single source of truth for severity color. Color encodes severity, not
+// category — a disciplined two-tone (neutral + accent) scheme.
+export function severityColor(sev: number): string {
+  if (sev >= 85) return '#e2574a' // critical
+  if (sev >= 65) return '#f4642a' // high (accent)
+  if (sev >= 40) return '#cf9a40' // moderate
+  return '#7a818c' // low / nominal
+}

@@ -1,10 +1,10 @@
 import { useStore } from '../store'
 
 function scoreColor(score: number): string {
-  if (score >= 75) return '#f87171'
-  if (score >= 55) return '#fb923c'
-  if (score >= 38) return '#fbbf24'
-  return '#34d399'
+  if (score >= 75) return '#e2574a'
+  if (score >= 55) return '#f4642a'
+  if (score >= 38) return '#cf9a40'
+  return '#7a818c'
 }
 
 export default function InstabilityPanel() {

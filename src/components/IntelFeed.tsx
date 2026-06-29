@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { ExternalLink, Search } from 'lucide-react'
 import { CATEGORY_META, feedEvents, STATIC_CATEGORIES, useStore } from '../store'
-import { timeAgo } from '../utils'
+import { severityColor, timeAgo } from '../utils'
 
 export default function IntelFeed() {
   const events = useStore(feedEvents)
@@ -96,6 +96,7 @@ export default function IntelFeed() {
         {feed.map((e) => {
           const meta = CATEGORY_META[e.category]
           const sel = e.id === selectedId
+          const sevColor = severityColor(e.severity)
           return (
             <button
               key={e.id}
@@ -103,16 +104,13 @@ export default function IntelFeed() {
               className={`w-full text-left px-3 py-2 border-b border-cmd-border/60 hover:bg-cmd-panel2 transition-colors ${
                 sel ? 'bg-cmd-panel2' : ''
               }`}
-              style={sel ? { boxShadow: `inset 3px 0 0 ${meta.color}` } : undefined}
+              style={sel ? { boxShadow: `inset 2px 0 0 ${sevColor}` } : undefined}
             >
               <div className="flex items-center justify-between gap-2 mb-0.5">
-                <span
-                  className="stat-chip shrink-0"
-                  style={{ color: meta.color, borderColor: meta.color + '55' }}
-                >
+                <span className="stat-chip shrink-0 text-cmd-dim border-cmd-border">
                   {meta.short}
                 </span>
-                <SevBar sev={e.severity} color={meta.color} />
+                <SevBar sev={e.severity} color={sevColor} />
                 <span className="font-mono text-[9px] text-cmd-dim shrink-0 ml-auto">
                   {timeAgo(e.timestamp)}
                 </span>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Globe from 'react-globe.gl'
 import { CATEGORY_META, useStore, visibleEvents } from '../store'
+import { severityColor } from '../utils'
 import type { CountryRisk, IntelEvent } from '../types'
 
 function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
@@ -62,7 +63,7 @@ export default function GlobeView() {
         startLng: x.e.lng!,
         endLat: top.lat,
         endLng: top.lng,
-        color: CATEGORY_META[x.e.category].color,
+        color: '#b5663a',
       }))
   }, [countryRisk, located])
 
@@ -112,7 +113,7 @@ export default function GlobeView() {
         pointsData={located}
         pointLat={(d: object) => (d as IntelEvent).lat!}
         pointLng={(d: object) => (d as IntelEvent).lng!}
-        pointColor={(d: object) => CATEGORY_META[(d as IntelEvent).category].color}
+        pointColor={(d: object) => severityColor((d as IntelEvent).severity)}
         pointAltitude={(d: object) => 0.01 + ((d as IntelEvent).severity / 100) * 0.32}
         pointRadius={(d: object) =>
           (d as IntelEvent).id === selectedId
@@ -126,7 +127,7 @@ export default function GlobeView() {
         ringLat={(d: object) => (d as IntelEvent).lat!}
         ringLng={(d: object) => (d as IntelEvent).lng!}
         ringColor={(d: object) => {
-          const c = CATEGORY_META[(d as IntelEvent).category].color
+          const c = severityColor((d as IntelEvent).severity)
           return () => c
         }}
         ringMaxRadius={(d: object) => 2 + ((d as IntelEvent).severity / 100) * 4}
@@ -159,14 +160,15 @@ export default function GlobeView() {
 
 function pointTooltip(e: IntelEvent): string {
   const c = CATEGORY_META[e.category]
+  const accent = severityColor(e.severity)
   return `
-    <div style="font-family:'JetBrains Mono',monospace;background:#0a0e14;border:1px solid ${c.color};
-      border-radius:6px;padding:8px 10px;max-width:240px;color:#c7d3df;box-shadow:0 0 16px ${c.color}44">
-      <div style="font-size:9px;letter-spacing:.15em;color:${c.color};text-transform:uppercase">
+    <div style="font-family:'JetBrains Mono',monospace;background:#0a0a0b;border:1px solid rgba(255,255,255,0.14);
+      border-radius:2px;padding:8px 10px;max-width:240px;color:#f3f4f5">
+      <div style="font-size:9px;letter-spacing:.15em;color:${accent};text-transform:uppercase">
         ${c.label} · SEV ${e.severity}
       </div>
       <div style="font-size:12px;font-weight:700;margin:3px 0">${escapeHtml(e.title)}</div>
-      <div style="font-size:10px;color:#5c6b7a">${escapeHtml(e.summary)}</div>
+      <div style="font-size:10px;color:#828791">${escapeHtml(e.summary)}</div>
     </div>`
 }
 

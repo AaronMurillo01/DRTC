@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useStore } from '../store'
 import { CATEGORY_META } from '../store'
-import { timeAgo } from '../utils'
+import { severityColor, timeAgo } from '../utils'
 
 export default function StatusBar() {
   const events = useStore((s) => s.events)
@@ -28,8 +28,8 @@ export default function StatusBar() {
             const meta = CATEGORY_META[e.category]
             return (
               <span key={e.id + i} className="flex items-center gap-1.5 text-cmd-dim">
-                <span style={{ color: meta.color }}>●</span>
-                <span style={{ color: meta.color }}>{meta.short}</span>
+                <span style={{ color: severityColor(e.severity) }}>●</span>
+                <span className="text-cmd-dim">{meta.short}</span>
                 <span className="text-cmd-text">{e.title}</span>
                 <span className="text-cmd-dim">[{e.severity}]</span>
               </span>

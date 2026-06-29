@@ -18,7 +18,7 @@ export default function MarketTicker() {
         )}
         {markets.slice(0, 8).map((m) => {
           const up = m.changePct >= 0
-          const color = up ? '#34d399' : '#f87171'
+          const color = up ? '#5b9c7b' : '#c2564a'
           return (
             <div
               key={m.symbol}

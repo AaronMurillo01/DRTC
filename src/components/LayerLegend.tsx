@@ -43,21 +43,19 @@ export default function LayerLegend() {
               <button
                 key={cat}
                 onClick={() => toggle(cat)}
-                className="w-full flex items-center gap-2 px-1.5 py-1 rounded hover:bg-cmd-panel2 transition-colors"
+                className="w-full flex items-center gap-2 px-1.5 py-1 rounded-sm hover:bg-cmd-panel2 transition-colors"
               >
                 <span
-                  className="w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0"
-                  style={{ borderColor: meta.color, background: on ? meta.color : 'transparent' }}
+                  className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${
+                    on ? 'bg-cmd-accent border-cmd-accent' : 'border-cmd-border'
+                  }`}
                 >
                   {on && <span className="text-cmd-bg text-[9px] font-bold leading-none">✓</span>}
                 </span>
                 <span
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{ background: meta.color }}
-                />
-                <span
-                  className="font-mono text-[10px] uppercase tracking-wider"
-                  style={{ color: on ? meta.color : '#5c6b7a' }}
+                  className={`font-mono text-[10px] uppercase tracking-wider ${
+                    on ? 'text-cmd-text' : 'text-cmd-dim'
+                  }`}
                 >
                   {meta.label}
                 </span>

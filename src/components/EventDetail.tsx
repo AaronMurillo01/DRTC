@@ -1,6 +1,6 @@
 import { ExternalLink, X } from 'lucide-react'
 import { CATEGORY_META, useStore } from '../store'
-import { timeAgo } from '../utils'
+import { severityColor, timeAgo } from '../utils'
 
 export default function EventDetail() {
   const selectedId = useStore((s) => s.selectedId)
@@ -10,13 +10,14 @@ export default function EventDetail() {
   const ev = events.find((e) => e.id === selectedId)
   if (!ev) return null
   const meta = CATEGORY_META[ev.category]
+  const accent = severityColor(ev.severity)
 
   return (
     <div
       className="absolute top-14 right-2 w-72 max-w-[calc(100%-1rem)] panel z-20"
-      style={{ borderColor: meta.color + '66', boxShadow: `0 0 24px ${meta.color}22` }}
+      style={{ borderColor: accent + '66' }}
     >
-      <div className="panel-header" style={{ color: meta.color }}>
+      <div className="panel-header" style={{ color: accent }}>
         <span>
           {meta.label} · SEV {ev.severity}
         </span>

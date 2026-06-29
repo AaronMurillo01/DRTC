@@ -15,20 +15,20 @@ import { buildBrief, computeCountryRisk, computeThreat } from './services/threat
 
 export const CATEGORY_META: Record<EventCategory, { label: string; color: string; short: string }> =
   {
-    // Muted, on-theme category palette — distinguishable but no neon that
-    // clashes with the flat-black + orange console.
-    seismic: { label: 'Seismic', color: '#e0a23c', short: 'SEIS' },
-    disaster: { label: 'Disaster', color: '#e2574a', short: 'DSTR' },
-    space: { label: 'Space Weather', color: '#b07ad6', short: 'SPCE' },
-    orbital: { label: 'Orbital', color: '#cfd3d8', short: 'ORBT' },
-    market: { label: 'Markets', color: '#5bb88f', short: 'MKT' },
-    cyber: { label: 'Cyber', color: '#7f8aa3', short: 'CYBR' },
-    signals: { label: 'Signals', color: '#5bb88f', short: 'SIG' },
-    spaceport: { label: 'Spaceports', color: '#9a7ad6', short: 'SPRT' },
-    nuclear: { label: 'Nuclear Sites', color: '#e8c247', short: 'NUKE' },
-    air: { label: 'Air Quality', color: '#5bb89a', short: 'AIR' },
-    weather: { label: 'Weather Alerts', color: '#6f9ad1', short: 'WX' },
-    neo: { label: 'Near-Earth Objects', color: '#b9a0e8', short: 'NEO' },
+    // Disciplined two-tone system: color encodes SEVERITY, not category, so
+    // the chrome stays neutral. Type is identified by the short code/label.
+    seismic: { label: 'Seismic', color: '#9aa0a6', short: 'SEIS' },
+    disaster: { label: 'Disaster', color: '#9aa0a6', short: 'DSTR' },
+    space: { label: 'Space Weather', color: '#9aa0a6', short: 'SPCE' },
+    orbital: { label: 'Orbital', color: '#9aa0a6', short: 'ORBT' },
+    market: { label: 'Markets', color: '#9aa0a6', short: 'MKT' },
+    cyber: { label: 'Cyber', color: '#9aa0a6', short: 'CYBR' },
+    signals: { label: 'Signals', color: '#9aa0a6', short: 'SIG' },
+    spaceport: { label: 'Spaceports', color: '#9aa0a6', short: 'SPRT' },
+    nuclear: { label: 'Nuclear Sites', color: '#9aa0a6', short: 'NUKE' },
+    air: { label: 'Air Quality', color: '#9aa0a6', short: 'AIR' },
+    weather: { label: 'Weather Alerts', color: '#9aa0a6', short: 'WX' },
+    neo: { label: 'Near-Earth Objects', color: '#9aa0a6', short: 'NEO' },
   }
 
 // Persistent reference layers — exempt from the time filter and the intel feed.
