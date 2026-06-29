@@ -23,7 +23,7 @@ export default {
           border: '#262629',
           grid: '#19191b',
           text: '#f3f4f5',
-          dim: '#71747a',
+          dim: '#828791',
           accent: '#f4642a',
           green: '#46a883',
           amber: '#cf9a40',

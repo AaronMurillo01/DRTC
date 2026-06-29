@@ -107,7 +107,7 @@ export default function GlobeView() {
         backgroundColor="rgba(0,0,0,0)"
         globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
         bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-        atmosphereColor="#22d3ee"
+        atmosphereColor="#c97a45"
         atmosphereAltitude={0.2}
         pointsData={located}
         pointLat={(d: object) => (d as IntelEvent).lat!}

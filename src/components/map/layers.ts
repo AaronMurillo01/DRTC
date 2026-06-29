@@ -70,13 +70,13 @@ export function addDataLayers(map: maplibregl.Map) {
         0,
         'rgba(0,0,0,0)',
         0.3,
-        '#0d3b66',
-        0.5,
-        '#22d3ee',
-        0.7,
-        '#fbbf24',
+        'rgba(120,70,40,0.5)',
+        0.55,
+        '#cf9a40',
+        0.78,
+        '#f4642a',
         1,
-        '#f87171',
+        '#d94a3d',
       ],
     },
   })
@@ -115,7 +115,7 @@ export function addDataLayers(map: maplibregl.Map) {
     paint: {
       'circle-radius': 14,
       'circle-color': 'rgba(0,0,0,0)',
-      'circle-stroke-color': '#22d3ee',
+      'circle-stroke-color': '#f4642a',
       'circle-stroke-width': 2,
     },
   })

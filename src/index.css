@@ -56,6 +56,93 @@ body {
   outline-offset: 1px;
 }
 
+/* --- MapLibre control theming for the dark console --- */
+.maplibregl-popup-content {
+  background: #0a0a0b !important;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  padding: 8px 10px;
+  box-shadow: 0 14px 34px -16px rgba(0, 0, 0, 0.9);
+}
+.maplibregl-popup-close-button {
+  color: #8a8d92;
+  font-size: 14px;
+  padding-right: 4px;
+}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: #0a0a0b;
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: #0a0a0b;
+}
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: #0a0a0b;
+}
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: #0a0a0b;
+}
+
+.maplibregl-ctrl-group {
+  background: #0a0a0b !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1) brightness(0.85);
+}
+.maplibregl-ctrl-group button:hover {
+  background: rgba(244, 100, 42, 0.12);
+}
+.maplibregl-ctrl-attrib {
+  background: rgba(10, 10, 11, 0.78) !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: #8a8d92 !important;
+}
+.maplibregl-ctrl-attrib-button {
+  filter: invert(0.7);
+}
+
+/* --- Range slider (MIN SEV) themed for the dark console --- */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+input[type='range']::-webkit-slider-runnable-track {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.16);
+}
+input[type='range']::-moz-range-track {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.16);
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  margin-top: -4px;
+  background: #f4642a;
+  border: none;
+  border-radius: 1px;
+}
+input[type='range']::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: #f4642a;
+  border: none;
+  border-radius: 1px;
+}
+
 /* Faint CRT scanlines over the whole console for a command-room feel */
 body::after {
   content: '';

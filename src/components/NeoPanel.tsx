@@ -32,7 +32,7 @@ export default function NeoPanel() {
             className="flex items-center gap-2 px-2 py-1.5 rounded-sm bg-white/[0.02] border border-white/5"
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full shrink-0 ${n.hazardous ? 'bg-cmd-red' : 'bg-[#c4b5fd]'}`}
+              className={`w-1.5 h-1.5 rounded-full shrink-0 ${n.hazardous ? 'bg-cmd-red' : 'bg-[#b9a0e8]'}`}
               title={n.hazardous ? 'Potentially hazardous' : 'Not hazardous'}
             />
             <div className="min-w-0 flex-1">

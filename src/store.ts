@@ -15,18 +15,20 @@ import { buildBrief, computeCountryRisk, computeThreat } from './services/threat
 
 export const CATEGORY_META: Record<EventCategory, { label: string; color: string; short: string }> =
   {
-    seismic: { label: 'Seismic', color: '#fbbf24', short: 'SEIS' },
-    disaster: { label: 'Disaster', color: '#f87171', short: 'DSTR' },
-    space: { label: 'Space Weather', color: '#e879f9', short: 'SPCE' },
-    orbital: { label: 'Orbital', color: '#22d3ee', short: 'ORBT' },
-    market: { label: 'Markets', color: '#34d399', short: 'MKT' },
-    cyber: { label: 'Cyber', color: '#60a5fa', short: 'CYBR' },
-    signals: { label: 'Signals', color: '#34d399', short: 'SIG' },
-    spaceport: { label: 'Spaceports', color: '#a78bfa', short: 'SPRT' },
-    nuclear: { label: 'Nuclear Sites', color: '#facc15', short: 'NUKE' },
-    air: { label: 'Air Quality', color: '#2dd4bf', short: 'AIR' },
-    weather: { label: 'Weather Alerts', color: '#38bdf8', short: 'WX' },
-    neo: { label: 'Near-Earth Objects', color: '#c4b5fd', short: 'NEO' },
+    // Muted, on-theme category palette — distinguishable but no neon that
+    // clashes with the flat-black + orange console.
+    seismic: { label: 'Seismic', color: '#e0a23c', short: 'SEIS' },
+    disaster: { label: 'Disaster', color: '#e2574a', short: 'DSTR' },
+    space: { label: 'Space Weather', color: '#b07ad6', short: 'SPCE' },
+    orbital: { label: 'Orbital', color: '#cfd3d8', short: 'ORBT' },
+    market: { label: 'Markets', color: '#5bb88f', short: 'MKT' },
+    cyber: { label: 'Cyber', color: '#7f8aa3', short: 'CYBR' },
+    signals: { label: 'Signals', color: '#5bb88f', short: 'SIG' },
+    spaceport: { label: 'Spaceports', color: '#9a7ad6', short: 'SPRT' },
+    nuclear: { label: 'Nuclear Sites', color: '#e8c247', short: 'NUKE' },
+    air: { label: 'Air Quality', color: '#5bb89a', short: 'AIR' },
+    weather: { label: 'Weather Alerts', color: '#6f9ad1', short: 'WX' },
+    neo: { label: 'Near-Earth Objects', color: '#b9a0e8', short: 'NEO' },
   }
 
 // Persistent reference layers — exempt from the time filter and the intel feed.

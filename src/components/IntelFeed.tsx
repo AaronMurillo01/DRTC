@@ -80,7 +80,7 @@ export default function IntelFeed() {
             {phase === 'acquiring' && (
               <div className="space-y-2 animate-pulse">
                 <div className="text-cmd-dim">Acquiring feeds…</div>
-                <div className="mx-auto h-1 w-24 rounded-full bg-cmd-accent/30 overflow-hidden">
+                <div className="mx-auto h-1 w-24 rounded-sm bg-cmd-accent/30 overflow-hidden">
                   <div className="h-full w-1/2 bg-cmd-accent/80 animate-sweep" />
                 </div>
               </div>
@@ -134,8 +134,8 @@ export default function IntelFeed() {
 
 function SevBar({ sev, color }: { sev: number; color: string }) {
   return (
-    <div className="flex-1 h-1 rounded-full bg-cmd-border overflow-hidden max-w-[80px]">
-      <div className="h-full rounded-full" style={{ width: `${sev}%`, background: color }} />
+    <div className="flex-1 h-1 rounded-sm bg-cmd-border overflow-hidden max-w-[80px]">
+      <div className="h-full rounded-sm" style={{ width: `${sev}%`, background: color }} />
     </div>
   )
 }

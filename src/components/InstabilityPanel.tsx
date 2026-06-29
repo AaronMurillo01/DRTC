@@ -44,13 +44,13 @@ export default function InstabilityPanel() {
                     {c.score}
                   </span>
                 </div>
-                <div className="h-1 rounded-full bg-cmd-border overflow-hidden mt-0.5">
+                <div className="h-1 rounded-sm bg-cmd-border overflow-hidden mt-0.5">
                   <div
-                    className="h-full rounded-full transition-all duration-700"
+                    className="h-full rounded-sm transition-all duration-700"
                     style={{ width: `${c.score}%`, background: color }}
                   />
                 </div>
-                <div className="font-mono text-[8px] text-cmd-dim truncate mt-0.5">
+                <div className="font-mono text-[9px] text-cmd-dim truncate mt-0.5">
                   {c.drivers.join(' · ')}
                 </div>
               </div>
