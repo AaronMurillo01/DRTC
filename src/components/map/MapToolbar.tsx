@@ -9,7 +9,7 @@ export interface MapTool {
 
 export function MapToolbar({ tools }: { tools: MapTool[] }) {
   return (
-    <div className="absolute top-2 right-2 z-10 flex items-center gap-1 p-1 rounded-sm bg-cmd-bg/90 border border-cmd-border">
+    <div className="absolute top-2 right-2 z-10 flex flex-wrap justify-end items-center gap-1 p-1 max-w-[48%] 2xl:max-w-none rounded-sm bg-cmd-bg/90 border border-cmd-border">
       {tools.map((t) => {
         const Icon = t.icon
         return (
@@ -22,7 +22,7 @@ export function MapToolbar({ tools }: { tools: MapTool[] }) {
             }`}
           >
             <Icon size={13} />
-            <span className="hidden lg:inline">{t.label}</span>
+            <span className="hidden 2xl:inline">{t.label}</span>
           </button>
         )
       })}

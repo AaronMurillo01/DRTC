@@ -22,7 +22,18 @@ interface FeedSpec {
 
 // Refresh cadence tuned to each upstream's update rate + rate limits.
 const FEEDS: FeedSpec[] = [
-  { id: 'orbital', intervalMs: 5_000, run: fetchOrbital },
+  {
+    id: 'orbital',
+    intervalMs: 5_000,
+    run: async () => {
+      const res = await fetchOrbital()
+      const iss = res.events?.[0]
+      if (iss?.lat != null && iss?.lng != null) {
+        useStore.getState().pushIssTrail([iss.lng, iss.lat])
+      }
+      return res
+    },
+  },
   { id: 'seismic', intervalMs: 60_000, run: fetchSeismic },
   {
     id: 'market',

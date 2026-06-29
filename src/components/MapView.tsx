@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl, { type GeoJSONSource } from 'maplibre-gl'
 import { forward as mgrsForward } from 'mgrs'
-import { Flame, Moon, Orbit, Satellite } from 'lucide-react'
+import { CloudRain, Flame, Moon, Orbit, Ruler, Satellite } from 'lucide-react'
 import { useStore, visibleEvents } from '../store'
 import { STYLE, applyView } from './map/mapStyle'
 import { addDataLayers } from './map/layers'
 import { eventsFC, riskFC, arcsFC, terminatorFC } from './map/sources'
 import { MapToolbar, type MapTool } from './map/MapToolbar'
+import { fetchRadarTemplate } from '../services/radar'
+import { bearing, haversineKm } from '../services/geo'
 
 export default function MapView() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -16,16 +18,23 @@ export default function MapView() {
   const draggingRef = useRef(false)
   const readyRef = useRef(false)
   const lastMoveRef = useRef(0)
+  const rulerRef = useRef(false)
   const [satellite, setSatellite] = useState(false)
   const [heatmap, setHeatmap] = useState(false)
   const [night, setNight] = useState(false)
   const [orbit, setOrbit] = useState(false)
+  const [radar, setRadar] = useState(false)
+  const [ruler, setRuler] = useState(false)
+  const [measurePts, setMeasurePts] = useState<[number, number][]>([])
 
   const events = useStore(visibleEvents)
   const risk = useStore((s) => s.countryRisk)
   const select = useStore((s) => s.select)
   const selectedId = useStore((s) => s.selectedId)
   const viewMode = useStore((s) => s.viewMode)
+  const issTrail = useStore((s) => s.issTrail)
+
+  rulerRef.current = ruler
 
   // Init once.
   useEffect(() => {
@@ -38,7 +47,9 @@ export default function MapView() {
       attributionControl: { compact: true },
       maxZoom: 16,
       maxPitch: 75,
-    })
+      // allow exporting the canvas as a PNG (valid at runtime; not in v5 types)
+      preserveDrawingBuffer: true,
+    } as maplibregl.MapOptions)
     mapRef.current = map
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right')
     popupRef.current = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 })
@@ -82,14 +93,21 @@ export default function MapView() {
         popupRef.current?.remove()
       })
       // Click a track to select it; click it again to deselect.
+      // (Suppressed while the ruler tool is active.)
       map.on('click', 'events-pt', (e) => {
+        if (rulerRef.current) return
         const id = e.features?.[0]?.properties?.id as string | undefined
         if (!id) return
         const current = useStore.getState().selectedId
         select(current === id ? null : id)
       })
-      // Click empty map (no track under the cursor) to clear the selection.
+      // Ruler adds vertices; otherwise empty-map click clears the selection.
       map.on('click', (e) => {
+        if (rulerRef.current) {
+          const { lng, lat } = e.lngLat
+          setMeasurePts((pts) => [...pts, [lng, lat]])
+          return
+        }
         const hits = map.queryRenderedFeatures(e.point, { layers: ['events-pt'] })
         if (!hits.length) select(null)
       })
@@ -207,17 +225,124 @@ export default function MapView() {
     }
   }, [selectedId, events])
 
+  // ISS ground track.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !readyRef.current) return
+    const data: GeoJSON.Feature =
+      issTrail.length > 1
+        ? {
+            type: 'Feature',
+            geometry: { type: 'LineString', coordinates: issTrail },
+            properties: {},
+          }
+        : { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} }
+    ;(map.getSource('iss-trail') as GeoJSONSource)?.setData(data)
+  }, [issTrail])
+
+  // Precipitation radar (RainViewer) — add/remove the raster layer on toggle.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !readyRef.current) return
+    let cancelled = false
+    const remove = () => {
+      if (map.getLayer('radar')) map.removeLayer('radar')
+      if (map.getSource('radar')) map.removeSource('radar')
+    }
+    if (radar) {
+      fetchRadarTemplate()
+        .then((tpl) => {
+          if (cancelled || !tpl || !mapRef.current) return
+          remove()
+          map.addSource('radar', { type: 'raster', tiles: [tpl], tileSize: 256, maxzoom: 7 })
+          map.addLayer(
+            { id: 'radar', type: 'raster', source: 'radar', paint: { 'raster-opacity': 0.55 } },
+            'risk-zone',
+          )
+        })
+        .catch(() => {})
+    } else {
+      remove()
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [radar])
+
+  // Measurement (ruler) vertices/line.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !readyRef.current) return
+    const features: GeoJSON.Feature[] = measurePts.map((p) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: p },
+      properties: {},
+    }))
+    if (measurePts.length > 1) {
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: measurePts },
+        properties: {},
+      })
+    }
+    ;(map.getSource('measure') as GeoJSONSource)?.setData({
+      type: 'FeatureCollection',
+      features,
+    })
+  }, [measurePts])
+
+  // Clearing the ruler when toggled off.
+  useEffect(() => {
+    if (!ruler) setMeasurePts([])
+  }, [ruler])
+
   const tools: MapTool[] = [
     { on: satellite, set: () => setSatellite((v) => !v), icon: Satellite, label: 'SAT' },
     { on: heatmap, set: () => setHeatmap((v) => !v), icon: Flame, label: 'HEAT' },
     { on: night, set: () => setNight((v) => !v), icon: Moon, label: 'DAY/NIGHT' },
     { on: orbit, set: () => setOrbit((v) => !v), icon: Orbit, label: 'ORBIT' },
+    { on: radar, set: () => setRadar((v) => !v), icon: CloudRain, label: 'RADAR' },
+    { on: ruler, set: () => setRuler((v) => !v), icon: Ruler, label: 'RULER' },
   ]
+
+  // Ruler readout: total path distance + bearing of the last leg.
+  const measure = useMemo(() => {
+    if (measurePts.length < 2) return null
+    let total = 0
+    for (let i = 1; i < measurePts.length; i++) {
+      const a = measurePts[i - 1]
+      const b = measurePts[i]
+      total += haversineKm(a[1], a[0], b[1], b[0])
+    }
+    const last = measurePts[measurePts.length - 1]
+    const prev = measurePts[measurePts.length - 2]
+    return { km: total, brg: bearing(prev, last) }
+  }, [measurePts])
 
   return (
     <>
       <div ref={containerRef} className="absolute inset-0" />
       <MapToolbar tools={tools} />
+      {ruler && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-3 py-1 rounded-sm bg-cmd-bg/90 border border-cmd-accent/50 font-mono text-[10px]">
+          <span className="text-cmd-accent">RULER</span>
+          {measure ? (
+            <>
+              <span className="text-cmd-text">
+                {measure.km < 1000
+                  ? `${measure.km.toFixed(1)} km`
+                  : `${(measure.km / 1000).toFixed(2)}k km`}
+              </span>
+              <span className="text-white/15">|</span>
+              <span className="text-cmd-text">
+                BRG {Math.round(measure.brg).toString().padStart(3, '0')}°
+              </span>
+            </>
+          ) : (
+            <span className="text-cmd-dim">click points to measure</span>
+          )}
+        </div>
+      )}
     </>
   )
 }

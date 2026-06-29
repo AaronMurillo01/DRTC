@@ -96,6 +96,10 @@ interface DRTCState {
   lastTick: number
   /** live map cursor readout (MGRS + lat/lng), shown in the status bar */
   cursor: { lat: number; lng: number; mgrs: string } | null
+  /** recent ISS positions [lng, lat] for the ground-track trail */
+  issTrail: [number, number][]
+  /** sonar ping on new critical alerts */
+  audioAlerts: boolean
 
   setSourceStatus: (id: string, patch: Partial<FeedSource>) => void
   ingest: (sourceId: string, events: IntelEvent[]) => void
@@ -112,6 +116,8 @@ interface DRTCState {
   setCommandOpen: (open: boolean) => void
   setHelpOpen: (open: boolean) => void
   setCursor: (c: { lat: number; lng: number; mgrs: string } | null) => void
+  pushIssTrail: (p: [number, number]) => void
+  toggleAudio: () => void
   dismissAlert: (id: string) => void
   clearAlerts: () => void
 }
@@ -285,6 +291,8 @@ export const useStore = create<DRTCState>((set) => ({
   helpOpen: false,
   lastTick: 0,
   cursor: null,
+  issTrail: [],
+  audioAlerts: false,
 
   setSourceStatus: (id, patch) =>
     set((s) => ({ sources: { ...s.sources, [id]: { ...s.sources[id], ...patch } } })),
@@ -374,6 +382,8 @@ export const useStore = create<DRTCState>((set) => ({
   setCommandOpen: (open) => set({ commandOpen: open }),
   setHelpOpen: (open) => set({ helpOpen: open }),
   setCursor: (c) => set({ cursor: c }),
+  pushIssTrail: (p) => set((s) => ({ issTrail: [...s.issTrail, p].slice(-150) })),
+  toggleAudio: () => set((s) => ({ audioAlerts: !s.audioAlerts })),
   dismissAlert: (id) => set((s) => ({ alerts: s.alerts.filter((a) => a.id !== id) })),
   clearAlerts: () => set({ alerts: [] }),
 }))

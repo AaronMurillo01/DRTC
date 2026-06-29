@@ -68,10 +68,22 @@ The strip on the right edge of the map adds:
 - **DAY/NIGHT** for a real time day and night terminator, recomputed every
   minute.
 - **ORBIT** to slowly spin the earth, which pauses the moment you grab the map.
+- **RADAR** for a live precipitation overlay (RainViewer).
+- **RULER** to measure great circle range and bearing between points you click.
 
 You also get a live MGRS and lat/lon readout under the cursor, a time range
-filter (1h, 6h, 24h, 48h, 7d, ALL), a layer panel, and great circle arcs that
-connect the most unstable country to the events driving its score.
+filter (1h, 6h, 24h, 48h, 7d, ALL), a layer panel, great circle arcs that
+connect the most unstable country to the events driving its score, and a live
+**ISS ground track** that trails the station's recent path.
+
+## More tools
+
+- **Frame capture.** Export the current map view as a PNG from the Export menu,
+  ready to drop into a report.
+- **Audio alerts.** A speaker toggle in the header plays a short sonar tone when
+  a new critical track appears, so you can run the board unattended.
+- **Reports.** Export a formatted SITREP (Markdown) or the full common operating
+  picture (JSON).
 
 ## Works on any screen
 
@@ -97,6 +109,7 @@ Everything here is free and needs no key.
 | ISS position | wheretheiss.at |
 | Signals | GDELT |
 | Near-Earth objects | NASA NeoWs |
+| Precipitation radar | RainViewer |
 | Markets | CoinGecko |
 | Basemap | CARTO dark tiles (OpenStreetMap data) |
 | Satellite | Esri World Imagery |

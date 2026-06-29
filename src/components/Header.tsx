@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Activity, Bell, Command, HelpCircle, Pause, Play, Radio } from 'lucide-react'
+import {
+  Activity,
+  Bell,
+  Command,
+  HelpCircle,
+  Pause,
+  Play,
+  Radio,
+  Volume2,
+  VolumeX,
+} from 'lucide-react'
 import { useStore } from '../store'
 import { utcClock, utcDate } from '../utils'
 import ExportMenu from './ExportMenu'
@@ -24,6 +34,8 @@ export default function Header() {
   const viewMode = useStore((s) => s.viewMode)
   const setViewMode = useStore((s) => s.setViewMode)
   const setHelpOpen = useStore((s) => s.setHelpOpen)
+  const audioAlerts = useStore((s) => s.audioAlerts)
+  const toggleAudio = useStore((s) => s.toggleAudio)
 
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 1000)
@@ -126,6 +138,18 @@ export default function Header() {
               <span className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-cmd-red text-cmd-bg font-mono text-[8px] font-bold flex items-center justify-center ring-2 ring-cmd-bg">
                 {alerts.length > 99 ? '99+' : alerts.length}
               </span>
+            )}
+          </button>
+
+          <button
+            onClick={toggleAudio}
+            title={audioAlerts ? 'Mute critical alert tone' : 'Enable critical alert tone'}
+            className="ctl !px-2 hidden sm:flex"
+          >
+            {audioAlerts ? (
+              <Volume2 size={13} className="text-cmd-accent" />
+            ) : (
+              <VolumeX size={13} />
             )}
           </button>
 

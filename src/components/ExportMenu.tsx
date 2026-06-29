@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Download, FileJson, FileText } from 'lucide-react'
+import { Download, FileJson, FileText, Image } from 'lucide-react'
 import { useStore } from '../store'
 import { buildCOP, buildSITREP, downloadText } from '../services/report'
 
@@ -39,6 +39,22 @@ export default function ExportMenu() {
     downloadText(`DRTC_COP_${stamp()}Z.json`, buildCOP(snapshot()), 'application/json')
     setOpen(false)
   }
+  const exportFrame = () => {
+    setOpen(false)
+    const canvas = document.querySelector<HTMLCanvasElement>('canvas.maplibregl-canvas')
+    if (!canvas) return // only the 2D/3D map canvas can be captured
+    canvas.toBlob((blob) => {
+      if (!blob) return
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `DRTC_FRAME_${stamp()}Z.png`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    }, 'image/png')
+  }
 
   return (
     <div className="relative" ref={ref}>
@@ -65,6 +81,16 @@ export default function ExportMenu() {
             <div>
               <div className="text-[11px] text-cmd-text">COP Data</div>
               <div className="font-mono text-[8px] text-cmd-dim">JSON snapshot</div>
+            </div>
+          </button>
+          <button
+            onClick={exportFrame}
+            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-cmd-panel2 text-left border-t border-cmd-border"
+          >
+            <Image size={13} className="text-cmd-accent" />
+            <div>
+              <div className="text-[11px] text-cmd-text">Map Frame</div>
+              <div className="font-mono text-[8px] text-cmd-dim">PNG capture</div>
             </div>
           </button>
         </div>

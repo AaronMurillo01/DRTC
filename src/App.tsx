@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useRef } from 'react'
 import { useFeeds } from './hooks/useFeeds'
 import { useStore } from './store'
 import Header from './components/Header'
@@ -30,6 +30,37 @@ export default function App() {
   const setViewMode = useStore((s) => s.setViewMode)
   const select = useStore((s) => s.select)
   const viewMode = useStore((s) => s.viewMode)
+  const alertCount = useStore((s) => s.alerts.length)
+  const audioAlerts = useStore((s) => s.audioAlerts)
+  const prevAlerts = useRef(alertCount)
+
+  // Sonar ping when a new critical alert arrives (if audio is enabled).
+  useEffect(() => {
+    if (audioAlerts && alertCount > prevAlerts.current) {
+      try {
+        const Ctx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+        const ctx = new Ctx()
+        const t = ctx.currentTime
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(880, t)
+        osc.frequency.exponentialRampToValueAtTime(440, t + 0.18)
+        gain.gain.setValueAtTime(0.0001, t)
+        gain.gain.exponentialRampToValueAtTime(0.18, t + 0.02)
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35)
+        osc.connect(gain).connect(ctx.destination)
+        osc.start(t)
+        osc.stop(t + 0.36)
+        osc.onended = () => ctx.close()
+      } catch {
+        /* audio not available */
+      }
+    }
+    prevAlerts.current = alertCount
+  }, [alertCount, audioAlerts])
 
   // Global hotkeys. Ignored while typing in an input/textarea.
   useEffect(() => {

@@ -3,10 +3,13 @@ import { eventsFC, riskFC, arcsFC, terminatorFC } from './sources'
 
 // Registers all DRTC data layers on a freshly loaded map.
 export function addDataLayers(map: maplibregl.Map) {
+  const empty: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
   map.addSource('risk', { type: 'geojson', data: riskFC([]) })
   map.addSource('arcs', { type: 'geojson', data: arcsFC([], []) })
   map.addSource('events', { type: 'geojson', data: eventsFC([]) })
   map.addSource('terminator', { type: 'geojson', data: terminatorFC(new Date()) })
+  map.addSource('iss-trail', { type: 'geojson', data: empty })
+  map.addSource('measure', { type: 'geojson', data: empty })
 
   map.addLayer({
     id: 'terminator-fill',
@@ -125,6 +128,40 @@ export function addDataLayers(map: maplibregl.Map) {
       'circle-color': 'rgba(0,0,0,0)',
       'circle-stroke-color': '#f4642a',
       'circle-stroke-width': 2,
+    },
+  })
+
+  // ISS ground track — fading dashed trail of recent positions.
+  map.addLayer({
+    id: 'iss-trail',
+    type: 'line',
+    source: 'iss-trail',
+    layout: { 'line-cap': 'round' },
+    paint: {
+      'line-color': 'rgba(226,231,238,0.45)',
+      'line-width': 1,
+      'line-dasharray': [2, 2],
+    },
+  })
+
+  // Measurement (ruler) line + vertices.
+  map.addLayer({
+    id: 'measure-line',
+    type: 'line',
+    source: 'measure',
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#f4642a', 'line-width': 1.4, 'line-dasharray': [3, 2] },
+  })
+  map.addLayer({
+    id: 'measure-pts',
+    type: 'circle',
+    source: 'measure',
+    filter: ['==', ['geometry-type'], 'Point'],
+    paint: {
+      'circle-radius': 3,
+      'circle-color': '#f4642a',
+      'circle-stroke-color': '#070707',
+      'circle-stroke-width': 1,
     },
   })
 }

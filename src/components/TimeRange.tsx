@@ -12,7 +12,7 @@ export default function TimeRange() {
           <button
             key={r.key}
             onClick={() => setTimeRange(r.key)}
-            className={`px-2.5 py-1 rounded-sm font-mono text-[10px] tracking-wider transition-colors ${
+            className={`px-2 sm:px-2.5 py-1 rounded-sm font-mono text-[10px] tracking-wider transition-colors ${
               on
                 ? 'bg-cmd-accent text-cmd-bg font-bold accent-glow'
                 : 'text-cmd-dim hover:text-cmd-text hover:bg-cmd-panel2'

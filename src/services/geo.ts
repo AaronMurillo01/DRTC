@@ -41,6 +41,16 @@ export function greatCircle(a: [number, number], b: [number, number], n = 48): n
   return pts
 }
 
+/** Initial bearing in degrees (0-360) from point a to b, both [lng, lat]. */
+export function bearing(a: [number, number], b: [number, number]): number {
+  const lat1 = a[1] * D2R
+  const lat2 = b[1] * D2R
+  const dLon = (b[0] - a[0]) * D2R
+  const y = Math.sin(dLon) * Math.cos(lat2)
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon)
+  return (Math.atan2(y, x) * R2D + 360) % 360
+}
+
 /** Subsolar point (lat/lng where the sun is overhead) for a given time. */
 export function subsolarPoint(d: Date): { lat: number; lng: number } {
   const dayMs = Date.UTC(d.getUTCFullYear(), 0, 0)
