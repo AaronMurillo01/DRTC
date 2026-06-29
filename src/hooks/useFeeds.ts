@@ -9,6 +9,7 @@ import { fetchMarkets } from '../services/markets'
 import { fetchNuclear, fetchSpaceports } from '../services/static'
 import { fetchAirQuality } from '../services/airquality'
 import { fetchWeather } from '../services/weather'
+import { fetchNeos } from '../services/neo'
 import type { IntelEvent } from '../types'
 
 interface FeedSpec {
@@ -35,6 +36,15 @@ const FEEDS: FeedSpec[] = [
   { id: 'signals', intervalMs: 180_000, run: fetchSignals },
   { id: 'air', intervalMs: 600_000, run: fetchAirQuality },
   { id: 'disaster', intervalMs: 300_000, run: fetchDisasters },
+  {
+    id: 'neo',
+    intervalMs: 3_600_000,
+    run: async () => {
+      const { neos, latencyMs } = await fetchNeos()
+      useStore.getState().setNeos(neos)
+      return { latencyMs }
+    },
+  },
   // Static reference layers — load once, refresh rarely.
   { id: 'spaceport', intervalMs: 3_600_000, run: fetchSpaceports },
   { id: 'nuclear', intervalMs: 3_600_000, run: fetchNuclear },

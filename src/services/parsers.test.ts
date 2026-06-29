@@ -3,6 +3,7 @@ import { parseSeismic } from './seismic'
 import { parseWeather } from './weather'
 import { parseAirQuality } from './airquality'
 import { parseSignals } from './signals'
+import { parseNeos } from './neo'
 
 describe('parseSeismic', () => {
   it('maps a USGS feature to an event with scaled severity', () => {
@@ -117,5 +118,56 @@ describe('parseSignals', () => {
 
   it('survives a shapeless payload', () => {
     expect(parseSignals({})).toEqual([])
+  })
+})
+
+describe('parseNeos', () => {
+  const raw = {
+    near_earth_objects: {
+      '2026-06-29': [
+        {
+          id: '1',
+          name: '(2026 AB) Safe',
+          is_potentially_hazardous_asteroid: false,
+          estimated_diameter: {
+            meters: { estimated_diameter_min: 100, estimated_diameter_max: 300 },
+          },
+          close_approach_data: [
+            {
+              close_approach_date_full: '2026-Jun-29 12:00',
+              relative_velocity: { kilometers_per_hour: '40000' },
+              miss_distance: { kilometers: '5000000', lunar: '13' },
+            },
+          ],
+        },
+        {
+          id: '2',
+          name: '(2026 XY) Hazard',
+          is_potentially_hazardous_asteroid: true,
+          estimated_diameter: {
+            meters: { estimated_diameter_min: 400, estimated_diameter_max: 600 },
+          },
+          close_approach_data: [
+            {
+              close_approach_date_full: '2026-Jun-29 06:00',
+              relative_velocity: { kilometers_per_hour: '90000' },
+              miss_distance: { kilometers: '8000000', lunar: '20' },
+            },
+          ],
+        },
+      ],
+    },
+  }
+
+  it('parses, averages diameter, and ranks hazardous first', () => {
+    const out = parseNeos(raw)
+    expect(out).toHaveLength(2)
+    expect(out[0].name).toBe('2026 XY Hazard') // hazardous sorts first
+    expect(out[0]).toMatchObject({ hazardous: true, diameterM: 500, missLunar: 20 })
+    expect(out[1].diameterM).toBe(200)
+  })
+
+  it('survives a shapeless payload', () => {
+    expect(parseNeos({})).toEqual([])
   })
 })

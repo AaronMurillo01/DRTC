@@ -6,6 +6,7 @@ import type {
   FeedSource,
   IntelEvent,
   MarketTick,
+  Neo,
   ThreatState,
   TimeRangeKey,
   ViewMode,
@@ -25,6 +26,7 @@ export const CATEGORY_META: Record<EventCategory, { label: string; color: string
     nuclear: { label: 'Nuclear Sites', color: '#facc15', short: 'NUKE' },
     air: { label: 'Air Quality', color: '#2dd4bf', short: 'AIR' },
     weather: { label: 'Weather Alerts', color: '#38bdf8', short: 'WX' },
+    neo: { label: 'Near-Earth Objects', color: '#c4b5fd', short: 'NEO' },
   }
 
 // Persistent reference layers — exempt from the time filter and the intel feed.
@@ -69,6 +71,7 @@ function savePrefs(p: Prefs) {
 interface DRTCState {
   events: IntelEvent[]
   markets: MarketTick[]
+  neos: Neo[]
   sources: Record<string, FeedSource>
   countryRisk: CountryRisk[]
   threat: ThreatState
@@ -93,6 +96,7 @@ interface DRTCState {
   setSourceStatus: (id: string, patch: Partial<FeedSource>) => void
   ingest: (sourceId: string, events: IntelEvent[]) => void
   setMarkets: (ticks: MarketTick[]) => void
+  setNeos: (neos: Neo[]) => void
   recompute: () => void
   select: (id: string | null) => void
   toggleCategory: (cat: EventCategory) => void
@@ -228,6 +232,18 @@ const INITIAL_SOURCES: FeedSource[] = [
     consecutiveFailures: 0,
     syncs: 0,
   },
+  {
+    id: 'neo',
+    label: 'NASA NeoWs',
+    category: 'neo',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
 ]
 
 const prefs = loadPrefs()
@@ -244,6 +260,7 @@ const DEFAULT_CATS: EventCategory[] = [
 export const useStore = create<DRTCState>((set) => ({
   events: [],
   markets: [],
+  neos: [],
   sources: Object.fromEntries(INITIAL_SOURCES.map((s) => [s.id, s])),
   countryRisk: [],
   threat: { level: 1, label: 'NOMINAL', index: 0, trend: 'flat' },
@@ -301,6 +318,7 @@ export const useStore = create<DRTCState>((set) => ({
     }),
 
   setMarkets: (ticks) => set({ markets: ticks }),
+  setNeos: (neos) => set({ neos }),
 
   recompute: () =>
     set((s) => {

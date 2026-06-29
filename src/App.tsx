@@ -7,6 +7,7 @@ import IntelFeed from './components/IntelFeed'
 import ThreatPanel from './components/ThreatPanel'
 import InstabilityPanel from './components/InstabilityPanel'
 import MarketTicker from './components/MarketTicker'
+import NeoPanel from './components/NeoPanel'
 import SourceStatus from './components/SourceStatus'
 import StatusBar from './components/StatusBar'
 import CommandPalette from './components/CommandPalette'
@@ -105,6 +106,9 @@ export default function App() {
           </ErrorBoundary>
           <ErrorBoundary label="MARKETS">
             <MarketTicker />
+          </ErrorBoundary>
+          <ErrorBoundary label="NEO">
+            <NeoPanel />
           </ErrorBoundary>
         </div>
       </main>

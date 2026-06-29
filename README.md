@@ -80,6 +80,7 @@ Everything here is free and needs no key.
 | Space weather | NOAA SWPC |
 | ISS position | wheretheiss.at |
 | Signals | GDELT |
+| Near-Earth objects | NASA NeoWs |
 | Markets | CoinGecko |
 | Basemap | CARTO dark tiles (OpenStreetMap data) |
 | Satellite | Esri World Imagery |
@@ -99,8 +100,10 @@ That starts the dev server (usually on http://localhost:5173). Build a
 production bundle with `npm run build` and serve it with `npm run preview`.
 
 The app fetches all of its data straight from the public APIs in the browser, so
-it needs an internet connection at runtime. There is no `.env` and nothing to
-configure.
+it needs an internet connection at runtime. There is nothing required to
+configure. The only optional setting is `VITE_NASA_KEY`: the NASA feed uses the
+shared `DEMO_KEY` by default, and you can drop in your own free key from
+api.nasa.gov for higher rate limits.
 
 ## Stack
 

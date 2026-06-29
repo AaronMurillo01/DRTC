@@ -12,6 +12,7 @@ export type EventCategory =
   | 'nuclear'
   | 'air'
   | 'weather'
+  | 'neo'
 
 export type ViewMode = '2d' | '3d' | 'globe'
 
@@ -59,6 +60,18 @@ export interface MarketTick {
   name: string
   price: number
   changePct: number
+}
+
+/** Near-Earth Object (asteroid) close approach, from NASA NeoWs. */
+export interface Neo {
+  id: string
+  name: string
+  diameterM: number
+  hazardous: boolean
+  missKm: number
+  missLunar: number
+  velocityKmh: number
+  approach: string
 }
 
 export interface CountryRisk {
