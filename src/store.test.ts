@@ -19,6 +19,8 @@ beforeEach(() => {
   useStore.setState({
     events: [],
     alerts: [],
+    alertedIds: new Set<string>(),
+    warmedSources: new Set<string>(),
     minSeverity: 0,
     timeRange: 'all',
     activeCategories: new Set<EventCategory>([

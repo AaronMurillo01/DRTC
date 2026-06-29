@@ -34,6 +34,15 @@ backend to run. Open it and it starts streaming.
   the log.
 - **Markets radar.** Live prices and 24h moves for the major coins.
 
+## About the scores
+
+The Global Threat Index and the Instability Index are **heuristics built for
+demonstration, not real intelligence assessments.** They combine open-source
+event severity and density with a fixed geopolitical baseline and a distance
+falloff. The weights are hand-tuned to produce a readable picture, not validated
+against any ground truth. Treat them as a way to rank and visualize the live
+feed, nothing more. The UI labels both panels as heuristic for the same reason.
+
 ## Map toolbar
 
 The strip on the right edge of the map adds:

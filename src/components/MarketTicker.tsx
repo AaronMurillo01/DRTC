@@ -7,7 +7,7 @@ export default function MarketTicker() {
   return (
     <div className="panel shrink-0">
       <div className="panel-header">
-        <span>◢ Markets Radar</span>
+        <span>Markets Radar</span>
         <span className="text-cmd-dim normal-case tracking-normal">USD · 24h</span>
       </div>
       <div className="p-2 grid grid-cols-2 gap-1">

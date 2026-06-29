@@ -50,8 +50,16 @@ export default function ThreatPanel() {
 
   return (
     <div className="panel shrink-0">
-      <div className="panel-header">
-        <span>◢ Global Threat Index</span>
+      <div
+        className="panel-header"
+        title="Heuristic model for demonstration. Derived from open-source event severity and density. Not an official assessment."
+      >
+        <span>
+          Global Threat Index
+          <span className="ml-1.5 text-[8px] text-cmd-dim/70 normal-case tracking-normal border border-cmd-border rounded px-1 py-px">
+            heuristic
+          </span>
+        </span>
         <Trend
           size={13}
           className={

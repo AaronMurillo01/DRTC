@@ -47,10 +47,9 @@ function centroid(
   return [x / ring.length, y / ring.length]
 }
 
-export async function fetchWeather(): Promise<{ events: IntelEvent[]; latencyMs: number }> {
-  const { data, latencyMs } = await getJSON<NWSResponse>(URL)
+export function parseWeather(data: NWSResponse): IntelEvent[] {
   const events: IntelEvent[] = []
-  for (const f of data.features ?? []) {
+  for (const f of data?.features ?? []) {
     const c = centroid(f.geometry)
     if (!c) continue // many alerts are zone-only with no polygon; skip those
     const p = f.properties
@@ -68,5 +67,10 @@ export async function fetchWeather(): Promise<{ events: IntelEvent[]; latencyMs:
       meta: { severity: p.severity ?? 'Unknown' },
     })
   }
-  return { events: events.slice(0, 200), latencyMs }
+  return events.slice(0, 200)
+}
+
+export async function fetchWeather(): Promise<{ events: IntelEvent[]; latencyMs: number }> {
+  const { data, latencyMs } = await getJSON<NWSResponse>(URL)
+  return { events: parseWeather(data), latencyMs }
 }

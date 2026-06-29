@@ -26,7 +26,7 @@ export default function KeyboardHelp() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="panel-header">
-          <span>◢ Keyboard & Controls</span>
+          <span>Keyboard &amp; Controls</span>
           <span className="text-cmd-dim">ESC</span>
         </div>
         <div className="p-3 space-y-1.5">

@@ -49,11 +49,7 @@ function band(aqi: number): string {
   return 'Hazardous'
 }
 
-export async function fetchAirQuality(): Promise<{ events: IntelEvent[]; latencyMs: number }> {
-  const lats = CITIES.map((c) => c.lat).join(',')
-  const lngs = CITIES.map((c) => c.lng).join(',')
-  const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lats}&longitude=${lngs}&current=us_aqi,pm2_5`
-  const { data, latencyMs } = await getJSON<AQItem | AQItem[]>(url)
+export function parseAirQuality(data: AQItem | AQItem[]): IntelEvent[] {
   const items = Array.isArray(data) ? data : [data]
   const events: IntelEvent[] = []
   items.forEach((it, i) => {
@@ -74,5 +70,13 @@ export async function fetchAirQuality(): Promise<{ events: IntelEvent[]; latency
       meta: { usAqi: Math.round(aqi), pm25: it.current?.pm2_5 ?? 0 },
     })
   })
-  return { events, latencyMs }
+  return events
+}
+
+export async function fetchAirQuality(): Promise<{ events: IntelEvent[]; latencyMs: number }> {
+  const lats = CITIES.map((c) => c.lat).join(',')
+  const lngs = CITIES.map((c) => c.lng).join(',')
+  const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lats}&longitude=${lngs}&current=us_aqi,pm2_5`
+  const { data, latencyMs } = await getJSON<AQItem | AQItem[]>(url)
+  return { events: parseAirQuality(data), latencyMs }
 }

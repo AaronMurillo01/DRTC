@@ -21,11 +21,10 @@ function firstHref(html?: string): string | undefined {
   return m?.[1]
 }
 
-export async function fetchSignals(): Promise<{ events: IntelEvent[]; latencyMs: number }> {
-  const { data, latencyMs } = await getJSON<GeoResponse>(URL)
-  const feats = (data.features ?? []).filter((f) => f.geometry?.type === 'Point')
+export function parseSignals(data: GeoResponse): IntelEvent[] {
+  const feats = (data?.features ?? []).filter((f) => f.geometry?.type === 'Point')
   const max = Math.max(1, ...feats.map((f) => f.properties.count || 0))
-  const events = feats.slice(0, 60).map<IntelEvent>((f) => {
+  return feats.slice(0, 60).map<IntelEvent>((f) => {
     const [lng, lat] = f.geometry.coordinates
     const count = f.properties.count || 0
     return {
@@ -44,5 +43,9 @@ export async function fetchSignals(): Promise<{ events: IntelEvent[]; latencyMs:
       meta: { mentions: count },
     }
   })
-  return { events, latencyMs }
+}
+
+export async function fetchSignals(): Promise<{ events: IntelEvent[]; latencyMs: number }> {
+  const { data, latencyMs } = await getJSON<GeoResponse>(URL)
+  return { events: parseSignals(data), latencyMs }
 }

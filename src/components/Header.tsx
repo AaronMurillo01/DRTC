@@ -61,12 +61,12 @@ export default function Header() {
             CONDITION
           </span>
           <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono"
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border font-mono"
             style={{
-              borderColor: `${color}66`,
+              borderColor: `${color}55`,
               color,
-              background: `${color}12`,
-              boxShadow: `0 0 18px -6px ${color}`,
+              background: `${color}14`,
+              boxShadow: `0 0 20px -6px ${color}`,
             }}
           >
             <Activity size={13} />
@@ -96,7 +96,7 @@ export default function Header() {
         {/* Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2 border-l border-cmd-border/70 pl-3 sm:pl-5">
           {/* view toggle */}
-          <div className="flex items-center p-0.5 rounded-lg border border-cmd-border/80 bg-cmd-bg/40">
+          <div className="flex items-center p-0.5 rounded-full border border-white/10 bg-white/5">
             {(
               [
                 ['2d', '2D'],
@@ -110,9 +110,9 @@ export default function Header() {
                 title={
                   m === '3d' ? '3D terrain map' : m === 'globe' ? 'Stylized globe' : 'Flat map'
                 }
-                className={`px-2.5 py-1 rounded-md font-mono text-[10px] font-bold tracking-wider transition-all duration-150 ${
+                className={`px-3 py-1 rounded-full font-mono text-[10px] font-bold tracking-wider transition-all duration-200 ${
                   viewMode === m
-                    ? 'bg-cmd-accent/90 text-cmd-bg shadow-glow'
+                    ? 'bg-cmd-accent text-cmd-bg shadow-glow'
                     : 'text-cmd-dim hover:text-cmd-text'
                 }`}
               >

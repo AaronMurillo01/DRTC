@@ -34,7 +34,7 @@ export default function SourceStatus() {
   return (
     <div className="panel shrink-0">
       <div className="panel-header">
-        <span>◢ System Health · BIT</span>
+        <span>System Health</span>
         <span
           className={
             bit === 'online'

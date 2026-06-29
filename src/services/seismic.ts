@@ -12,9 +12,9 @@ interface USGSResponse {
 
 const URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'
 
-export async function fetchSeismic(): Promise<{ events: IntelEvent[]; latencyMs: number }> {
-  const { data, latencyMs } = await getJSON<USGSResponse>(URL)
-  const events = (data.features ?? [])
+// Pure parser, exported for testing.
+export function parseSeismic(data: USGSResponse): IntelEvent[] {
+  return (data?.features ?? [])
     .filter((f) => f.geometry?.coordinates && f.properties?.mag != null)
     .map<IntelEvent>((f) => {
       const [lng, lat, depth] = f.geometry.coordinates
@@ -36,5 +36,9 @@ export async function fetchSeismic(): Promise<{ events: IntelEvent[]; latencyMs:
         meta: { magnitude: mag, depthKm: Math.round(depth) },
       }
     })
-  return { events, latencyMs }
+}
+
+export async function fetchSeismic(): Promise<{ events: IntelEvent[]; latencyMs: number }> {
+  const { data, latencyMs } = await getJSON<USGSResponse>(URL)
+  return { events: parseSeismic(data), latencyMs }
 }

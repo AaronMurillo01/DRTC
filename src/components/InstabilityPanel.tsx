@@ -13,8 +13,16 @@ export default function InstabilityPanel() {
 
   return (
     <div className="panel flex-1 min-h-[260px] lg:min-h-[180px]">
-      <div className="panel-header">
-        <span>◢ Instability Index</span>
+      <div
+        className="panel-header"
+        title="Heuristic model: a geopolitical baseline plus proximity-weighted live events. Illustrative, not an official assessment."
+      >
+        <span>
+          Instability Index
+          <span className="ml-1.5 text-[8px] text-cmd-dim/70 normal-case tracking-normal border border-cmd-border rounded px-1 py-px">
+            heuristic
+          </span>
+        </span>
         <span className="text-cmd-dim normal-case tracking-normal">DRTC-CII</span>
       </div>
       <div className="overflow-y-auto flex-1 min-h-0 p-2 space-y-1.5">

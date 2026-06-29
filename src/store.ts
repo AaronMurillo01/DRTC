@@ -66,10 +66,6 @@ function savePrefs(p: Prefs) {
   }
 }
 
-// Module-level alert bookkeeping (kept out of state to avoid churn).
-const alerted = new Set<string>()
-const warmedSources = new Set<string>()
-
 interface DRTCState {
   events: IntelEvent[]
   markets: MarketTick[]
@@ -79,6 +75,10 @@ interface DRTCState {
   threatHistory: number[]
   brief: string
   alerts: Alert[]
+  /** ids already surfaced as alerts, so we don't re-alert (first-class state) */
+  alertedIds: Set<string>
+  /** sources whose first historical batch has been seen (warm-up) */
+  warmedSources: Set<string>
   selectedId: string | null
   activeCategories: Set<EventCategory>
   minSeverity: number
@@ -250,6 +250,8 @@ export const useStore = create<DRTCState>((set) => ({
   threatHistory: [],
   brief: '',
   alerts: [],
+  alertedIds: new Set<string>(),
+  warmedSources: new Set<string>(),
   selectedId: null,
   activeCategories: new Set<EventCategory>(prefs?.activeCategories ?? DEFAULT_CATS),
   minSeverity: prefs?.minSeverity ?? 0,
@@ -273,14 +275,16 @@ export const useStore = create<DRTCState>((set) => ({
       // Alert detection: emit only for fresh criticals after a source warms up,
       // so the first historical batch doesn't flood the alert log.
       let alerts = s.alerts
+      const alertedIds = new Set(s.alertedIds)
+      const warmedSources = new Set(s.warmedSources)
       const high = incoming.filter((e) => e.severity >= ALERT_THRESHOLD)
       if (!warmedSources.has(sourceId)) {
-        high.forEach((e) => alerted.add(e.id))
+        high.forEach((e) => alertedIds.add(e.id))
         warmedSources.add(sourceId)
       } else {
-        const fresh = high.filter((e) => !alerted.has(e.id))
+        const fresh = high.filter((e) => !alertedIds.has(e.id))
         if (fresh.length) {
-          fresh.forEach((e) => alerted.add(e.id))
+          fresh.forEach((e) => alertedIds.add(e.id))
           const newAlerts: Alert[] = fresh.map((e) => ({
             id: `al-${e.id}`,
             title: e.title,
@@ -293,7 +297,7 @@ export const useStore = create<DRTCState>((set) => ({
           alerts = [...newAlerts, ...s.alerts].slice(0, 40)
         }
       }
-      return { events: merged, alerts }
+      return { events: merged, alerts, alertedIds, warmedSources }
     }),
 
   setMarkets: (ticks) => set({ markets: ticks }),

@@ -1,6 +1,7 @@
 // DRTC correlation engine: turns the raw event stream into a Global Threat
 // Index, a 5-tier condition level, and a per-country Instability Index.
 import type { CountryRisk, IntelEvent, MarketTick, ThreatState } from '../types'
+import { haversineKm } from './geo'
 
 // Tier-1 watch list with a baseline geopolitical stress weight (0-40).
 const WATCH: { iso: string; name: string; lat: number; lng: number; base: number }[] = [
@@ -25,16 +26,6 @@ const WATCH: { iso: string; name: string; lat: number; lng: number; base: number
   { iso: 'GB', name: 'United Kingdom', lat: 51.5, lng: -0.12, base: 12 },
   { iso: 'DE', name: 'Germany', lat: 52.52, lng: 13.4, base: 11 },
 ]
-
-function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
-  const R = 6371
-  const dLat = ((bLat - aLat) * Math.PI) / 180
-  const dLng = ((bLng - aLng) * Math.PI) / 180
-  const s =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)))
-}
 
 const CAT_LABEL: Record<string, string> = {
   seismic: 'seismic activity',

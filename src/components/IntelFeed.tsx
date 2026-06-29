@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { ExternalLink, Search } from 'lucide-react'
-import { CATEGORY_META, feedEvents, useStore } from '../store'
+import { CATEGORY_META, feedEvents, STATIC_CATEGORIES, useStore } from '../store'
 import { timeAgo } from '../utils'
 
 export default function IntelFeed() {
@@ -11,6 +11,18 @@ export default function IntelFeed() {
   const setQuery = useStore((s) => s.setQuery)
   const minSeverity = useStore((s) => s.minSeverity)
   const setMinSeverity = useStore((s) => s.setMinSeverity)
+  const sources = useStore((s) => s.sources)
+
+  // Distinguish acquiring vs. offline vs. nothing-matches-filters.
+  const phase = useMemo(() => {
+    // Only the live (non-reference) feeds determine acquiring/offline state.
+    const live = Object.values(sources).filter((s) => !STATIC_CATEGORIES.has(s.category))
+    const anyPending = live.some((s) => s.status === 'pending')
+    const allDown = live.length > 0 && live.every((s) => s.status === 'offline')
+    if (events.length === 0 && anyPending) return 'acquiring'
+    if (events.length === 0 && allDown) return 'offline'
+    return 'ready'
+  }, [sources, events.length])
 
   const feed = useMemo(() => {
     const q = query.toLowerCase().trim()
@@ -25,7 +37,7 @@ export default function IntelFeed() {
   return (
     <div className="panel flex-1 min-h-[420px] lg:min-h-0">
       <div className="panel-header">
-        <span>◢ Intel Stream</span>
+        <span>Intel Stream</span>
         <span className="text-cmd-accent">{feed.length} TRACKS</span>
       </div>
       <div className="px-2 py-1.5 border-b border-cmd-border space-y-1.5 shrink-0">
@@ -64,8 +76,21 @@ export default function IntelFeed() {
       </div>
       <div className="overflow-y-auto flex-1 min-h-0">
         {feed.length === 0 && (
-          <div className="p-4 text-center text-cmd-dim font-mono text-[11px] animate-flicker">
-            ░ ACQUIRING FEEDS ░
+          <div className="p-6 text-center font-mono text-[11px]">
+            {phase === 'acquiring' && (
+              <div className="space-y-2 animate-pulse">
+                <div className="text-cmd-dim">Acquiring feeds…</div>
+                <div className="mx-auto h-1 w-24 rounded-full bg-cmd-accent/30 overflow-hidden">
+                  <div className="h-full w-1/2 bg-cmd-accent/80 animate-sweep" />
+                </div>
+              </div>
+            )}
+            {phase === 'offline' && (
+              <div className="text-cmd-red">All feeds offline. Check your connection.</div>
+            )}
+            {phase === 'ready' && (
+              <div className="text-cmd-dim">No tracks match the current filters.</div>
+            )}
           </div>
         )}
         {feed.map((e) => {
