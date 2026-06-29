@@ -1,6 +1,7 @@
 // Air quality via Open-Meteo (free, no key, CORS enabled).
 // One request covers every city by passing comma-separated coordinates.
 import { getJSON, hashId } from './http'
+import { haversineKm } from './geo'
 import type { IntelEvent } from '../types'
 
 const CITIES: { name: string; lat: number; lng: number }[] = [
@@ -49,27 +50,44 @@ function band(aqi: number): string {
   return 'Hazardous'
 }
 
+// Match each result to its city by the returned coordinates (robust to
+// reordering or dropped locations), not by array index.
+function nearestCity(lat: number, lng: number) {
+  let best = CITIES[0]
+  let bestD = Infinity
+  for (const c of CITIES) {
+    const d = haversineKm(lat, lng, c.lat, c.lng)
+    if (d < bestD) {
+      bestD = d
+      best = c
+    }
+  }
+  return bestD <= 60 ? best : null // Open-Meteo snaps to a grid cell (~11km)
+}
+
 export function parseAirQuality(data: AQItem | AQItem[]): IntelEvent[] {
   const items = Array.isArray(data) ? data : [data]
   const events: IntelEvent[] = []
-  items.forEach((it, i) => {
-    const city = CITIES[i]
+  for (const it of items) {
     const aqi = it?.current?.us_aqi
-    if (!city || aqi == null) return
+    if (aqi == null || it.latitude == null || it.longitude == null) continue
+    const city = nearestCity(it.latitude, it.longitude)
+    if (!city) continue
+    const pm = it.current?.pm2_5
     events.push({
       id: hashId('air', city.name),
       source: 'Open-Meteo',
       category: 'air',
       severity: Math.min(100, Math.round(aqi / 3)),
       title: `${city.name} · AQI ${Math.round(aqi)}`,
-      summary: `${band(aqi)} · PM2.5 ${it.current?.pm2_5 ?? '–'} µg/m³`,
+      summary: `${band(aqi)} · PM2.5 ${pm ?? '–'} µg/m³`,
       region: city.name,
       lat: city.lat,
       lng: city.lng,
       timestamp: Date.now(),
-      meta: { usAqi: Math.round(aqi), pm25: it.current?.pm2_5 ?? 0 },
+      meta: { usAqi: Math.round(aqi), pm25: pm ?? 0 },
     })
-  })
+  }
   return events
 }
 

@@ -6,13 +6,7 @@ import { useStore, visibleEvents } from '../store'
 import { STYLE, applyView } from './map/mapStyle'
 import { addDataLayers } from './map/layers'
 import { eventsFC, riskFC, arcsFC, terminatorFC } from './map/sources'
-import { MapToolbar, CoordReadout, type MapTool } from './map/MapToolbar'
-
-interface Coord {
-  lat: number
-  lng: number
-  mgrs: string
-}
+import { MapToolbar, type MapTool } from './map/MapToolbar'
 
 export default function MapView() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -22,7 +16,6 @@ export default function MapView() {
   const draggingRef = useRef(false)
   const readyRef = useRef(false)
   const lastMoveRef = useRef(0)
-  const [coord, setCoord] = useState<Coord | null>(null)
   const [satellite, setSatellite] = useState(false)
   const [heatmap, setHeatmap] = useState(false)
   const [night, setNight] = useState(false)
@@ -104,9 +97,9 @@ export default function MapView() {
         } catch {
           /* polar regions are outside the MGRS grid */
         }
-        setCoord({ lat, lng, mgrs })
+        useStore.getState().setCursor({ lat, lng, mgrs })
       })
-      map.on('mouseout', () => setCoord(null))
+      map.on('mouseout', () => useStore.getState().setCursor(null))
       map.on('dragstart', () => (draggingRef.current = true))
       map.on('dragend', () => (draggingRef.current = false))
     })
@@ -136,7 +129,10 @@ export default function MapView() {
     const map = mapRef.current
     if (!map || !readyRef.current) return
     ;(map.getSource('risk') as GeoJSONSource)?.setData(riskFC(risk))
-    ;(map.getSource('arcs') as GeoJSONSource)?.setData(arcsFC(risk, useStore.getState().events))
+    // Use the same filtered view as the events effect so arcs stay consistent.
+    ;(map.getSource('arcs') as GeoJSONSource)?.setData(
+      arcsFC(risk, visibleEvents(useStore.getState())),
+    )
   }, [risk])
 
   useEffect(() => {
@@ -214,7 +210,6 @@ export default function MapView() {
     <>
       <div ref={containerRef} className="absolute inset-0" />
       <MapToolbar tools={tools} />
-      <CoordReadout coord={coord} />
     </>
   )
 }

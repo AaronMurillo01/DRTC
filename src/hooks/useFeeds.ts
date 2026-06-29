@@ -15,7 +15,9 @@ import type { IntelEvent } from '../types'
 interface FeedSpec {
   id: string
   intervalMs: number
-  run: () => Promise<{ events?: IntelEvent[]; latencyMs: number }>
+  // `count` lets feeds that don't emit map events (markets, NEO) still report
+  // how many records they pulled, so System Health shows a real number.
+  run: () => Promise<{ events?: IntelEvent[]; latencyMs: number; count?: number }>
 }
 
 // Refresh cadence tuned to each upstream's update rate + rate limits.
@@ -28,7 +30,7 @@ const FEEDS: FeedSpec[] = [
     run: async () => {
       const { ticks, latencyMs } = await fetchMarkets()
       useStore.getState().setMarkets(ticks)
-      return { latencyMs }
+      return { latencyMs, count: ticks.length }
     },
   },
   { id: 'space', intervalMs: 120_000, run: fetchSpace },
@@ -42,7 +44,7 @@ const FEEDS: FeedSpec[] = [
     run: async () => {
       const { neos, latencyMs } = await fetchNeos()
       useStore.getState().setNeos(neos)
-      return { latencyMs }
+      return { latencyMs, count: neos.length }
     },
   },
   // Static reference layers — load once, refresh rarely.
@@ -68,7 +70,7 @@ export function useFeeds() {
 
       const prev = state.sources[spec.id]
       try {
-        const { events, latencyMs } = await spec.run()
+        const { events, latencyMs, count } = await spec.run()
         if (disposed) return
         const history = [...prev.latencyHistory, latencyMs].slice(-30)
         setSourceStatus(spec.id, {
@@ -78,7 +80,7 @@ export function useFeeds() {
           latencyHistory: history,
           consecutiveFailures: 0,
           syncs: prev.syncs + 1,
-          count: events ? events.length : prev.count,
+          count: events ? events.length : (count ?? prev.count),
           error: undefined,
         })
         if (events) ingest(spec.id, events)

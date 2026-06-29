@@ -19,7 +19,11 @@ const LAYERS: EventCategory[] = [
 export default function LayerLegend() {
   const active = useStore((s) => s.activeCategories)
   const toggle = useStore((s) => s.toggleCategory)
-  const [open, setOpen] = useState(true)
+  // Collapsed by default on small screens so it doesn't overlap the event card
+  // on a short map; expanded on the roomy desktop layout.
+  const [open, setOpen] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth >= 1280,
+  )
 
   return (
     <div className="absolute bottom-2 left-2 z-10 w-48 panel bg-cmd-panel/90 backdrop-blur">

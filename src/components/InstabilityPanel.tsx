@@ -12,7 +12,7 @@ export default function InstabilityPanel() {
   const top = risk.slice(0, 8)
 
   return (
-    <div className="panel flex-1 min-h-[260px] lg:min-h-[180px]">
+    <div className="panel flex-1 min-h-[260px] xl:min-h-[180px]">
       <div
         className="panel-header"
         title="Heuristic model: a geopolitical baseline plus proximity-weighted live events. Illustrative, not an official assessment."

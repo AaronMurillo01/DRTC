@@ -30,19 +30,3 @@ export function MapToolbar({ tools }: { tools: MapTool[] }) {
   )
 }
 
-export function CoordReadout({
-  coord,
-}: {
-  coord: { lat: number; lng: number; mgrs: string } | null
-}) {
-  return (
-    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 hidden md:flex items-center gap-3 px-3 py-1 rounded-xl bg-cmd-panel/85 backdrop-blur-md border border-white/10 font-mono text-[10px]">
-      <span className="text-cmd-dim">MGRS</span>
-      <span className="text-cmd-accent w-44 text-center">{coord ? coord.mgrs : '——'}</span>
-      <span className="text-white/15">|</span>
-      <span className="text-cmd-text w-32 text-center">
-        {coord ? `${coord.lat.toFixed(3)}, ${coord.lng.toFixed(3)}` : '——'}
-      </span>
-    </div>
-  )
-}

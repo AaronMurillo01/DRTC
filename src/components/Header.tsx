@@ -56,7 +56,7 @@ export default function Header() {
 
       <div className="flex items-center gap-3 sm:gap-5">
         {/* Threat condition */}
-        <div className="hidden lg:flex items-center gap-2.5">
+        <div className="hidden xl:flex items-center gap-2.5">
           <span className="hidden xl:inline font-mono text-[9px] text-cmd-dim tracking-[0.2em]">
             CONDITION
           </span>
@@ -77,7 +77,7 @@ export default function Header() {
         </div>
 
         {/* Clock */}
-        <div className="hidden lg:block text-right leading-tight font-mono border-l border-cmd-border/70 pl-5">
+        <div className="hidden xl:block text-right leading-tight font-mono border-l border-cmd-border/70 pl-5">
           <div className="text-cmd-text text-sm tracking-[0.15em] tabular-nums">
             {utcClock(now)}
           </div>
@@ -85,7 +85,7 @@ export default function Header() {
         </div>
 
         {/* Feed health */}
-        <div className="hidden lg:flex items-center gap-1.5 font-mono text-[11px]">
+        <div className="hidden xl:flex items-center gap-1.5 font-mono text-[11px]">
           <span
             className={`w-1.5 h-1.5 rounded-full ${online === total ? 'bg-cmd-green' : online === 0 ? 'bg-cmd-red' : 'bg-cmd-amber'}`}
           />
@@ -143,7 +143,7 @@ export default function Header() {
             {paused ? 'PAUSED' : 'LIVE'}
           </button>
 
-          <span className="hidden lg:block">
+          <span className="hidden xl:block">
             <ExportMenu />
           </span>
 

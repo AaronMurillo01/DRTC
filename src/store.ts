@@ -92,6 +92,8 @@ interface DRTCState {
   commandOpen: boolean
   helpOpen: boolean
   lastTick: number
+  /** live map cursor readout (MGRS + lat/lng), shown in the status bar */
+  cursor: { lat: number; lng: number; mgrs: string } | null
 
   setSourceStatus: (id: string, patch: Partial<FeedSource>) => void
   ingest: (sourceId: string, events: IntelEvent[]) => void
@@ -107,6 +109,7 @@ interface DRTCState {
   togglePause: () => void
   setCommandOpen: (open: boolean) => void
   setHelpOpen: (open: boolean) => void
+  setCursor: (c: { lat: number; lng: number; mgrs: string } | null) => void
   dismissAlert: (id: string) => void
   clearAlerts: () => void
 }
@@ -279,6 +282,7 @@ export const useStore = create<DRTCState>((set) => ({
   commandOpen: false,
   helpOpen: false,
   lastTick: 0,
+  cursor: null,
 
   setSourceStatus: (id, patch) =>
     set((s) => ({ sources: { ...s.sources, [id]: { ...s.sources[id], ...patch } } })),
@@ -302,6 +306,12 @@ export const useStore = create<DRTCState>((set) => ({
         const fresh = high.filter((e) => !alertedIds.has(e.id))
         if (fresh.length) {
           fresh.forEach((e) => alertedIds.add(e.id))
+          // Bound the dedup set so a long session can't grow it without limit.
+          if (alertedIds.size > 1000) {
+            const trimmed = [...alertedIds].slice(-500)
+            alertedIds.clear()
+            trimmed.forEach((id) => alertedIds.add(id))
+          }
           const newAlerts: Alert[] = fresh.map((e) => ({
             id: `al-${e.id}`,
             title: e.title,
@@ -361,6 +371,7 @@ export const useStore = create<DRTCState>((set) => ({
   togglePause: () => set((s) => ({ paused: !s.paused })),
   setCommandOpen: (open) => set({ commandOpen: open }),
   setHelpOpen: (open) => set({ helpOpen: open }),
+  setCursor: (c) => set({ cursor: c }),
   dismissAlert: (id) => set((s) => ({ alerts: s.alerts.filter((a) => a.id !== id) })),
   clearAlerts: () => set({ alerts: [] }),
 }))

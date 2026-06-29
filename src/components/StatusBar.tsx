@@ -7,6 +7,7 @@ export default function StatusBar() {
   const events = useStore((s) => s.events)
   const lastTick = useStore((s) => s.lastTick)
   const paused = useStore((s) => s.paused)
+  const cursor = useStore((s) => s.cursor)
 
   const marquee = useMemo(() => {
     const hot = [...events].sort((a, b) => b.severity - a.severity).slice(0, 14)
@@ -36,6 +37,14 @@ export default function StatusBar() {
           })}
         </div>
       </div>
+      {cursor && (
+        <div className="hidden md:flex items-center gap-2 px-3 border-l border-cmd-border shrink-0">
+          <span className="text-cmd-accent">{cursor.mgrs}</span>
+          <span className="text-cmd-dim">
+            {cursor.lat.toFixed(2)}, {cursor.lng.toFixed(2)}
+          </span>
+        </div>
+      )}
       <div className="px-3 border-l border-cmd-border shrink-0 text-cmd-dim">
         SYNC {lastTick ? timeAgo(lastTick) : '–'} AGO
       </div>

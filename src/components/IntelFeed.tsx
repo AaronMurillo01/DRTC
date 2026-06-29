@@ -35,7 +35,7 @@ export default function IntelFeed() {
   }, [events, query])
 
   return (
-    <div className="panel flex-1 min-h-[420px] lg:min-h-0">
+    <div className="panel flex-1 min-h-[420px] xl:min-h-0">
       <div className="panel-header">
         <span>Intel Stream</span>
         <span className="text-cmd-accent">{feed.length} TRACKS</span>

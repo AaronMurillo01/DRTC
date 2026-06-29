@@ -29,12 +29,17 @@ export function parseNeos(data: FeedResponse): Neo[] {
   return all
     .map<Neo>((n) => {
       const ca = n.close_approach_data?.[0]
-      const dmin = n.estimated_diameter?.meters?.estimated_diameter_min ?? 0
-      const dmax = n.estimated_diameter?.meters?.estimated_diameter_max ?? 0
+      const m = n.estimated_diameter?.meters
+      const bounds = [m?.estimated_diameter_min, m?.estimated_diameter_max].filter(
+        (v): v is number => typeof v === 'number' && v > 0,
+      )
+      const diameterM = bounds.length
+        ? Math.round(bounds.reduce((s, v) => s + v, 0) / bounds.length)
+        : 0
       return {
         id: n.id,
         name: (n.name ?? n.id).replace(/[()]/g, '').trim(),
-        diameterM: Math.round((dmin + dmax) / 2),
+        diameterM,
         hazardous: !!n.is_potentially_hazardous_asteroid,
         missKm: ca?.miss_distance?.kilometers ? Math.round(Number(ca.miss_distance.kilometers)) : 0,
         missLunar: ca?.miss_distance?.lunar ? Number(Number(ca.miss_distance.lunar).toFixed(1)) : 0,

@@ -38,13 +38,19 @@ function centroid(
   if (geom.type === 'Polygon') ring = (geom.coordinates as number[][][])[0]
   else if (geom.type === 'MultiPolygon') ring = (geom.coordinates as number[][][][])[0]?.[0]
   if (!ring || !ring.length) return null
+  // GeoJSON rings repeat the first vertex as the last; drop it so the centroid
+  // isn't biased toward that corner.
+  const first = ring[0]
+  const last = ring[ring.length - 1]
+  const verts =
+    ring.length > 1 && first[0] === last[0] && first[1] === last[1] ? ring.slice(0, -1) : ring
   let x = 0
   let y = 0
-  for (const [lng, lat] of ring) {
+  for (const [lng, lat] of verts) {
     x += lng
     y += lat
   }
-  return [x / ring.length, y / ring.length]
+  return [x / verts.length, y / verts.length]
 }
 
 export function parseWeather(data: NWSResponse): IntelEvent[] {
