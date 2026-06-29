@@ -43,6 +43,22 @@ falloff. The weights are hand-tuned to produce a readable picture, not validated
 against any ground truth. Treat them as a way to rank and visualize the live
 feed, nothing more. The UI labels both panels as heuristic for the same reason.
 
+## Design
+
+The interface is a flat, pure black command console: hairline-bordered panels,
+sharp corners, mono type, and subtle HUD framing. There is one accent color
+(orange) and one rule for everything else: **color encodes severity, not
+category.** Tracks, bars, gauges, and rings all move along the same four step
+scale, so a glance reads as threat level rather than a legend of hues.
+
+```
+NOMINAL  slate   ·  MODERATE  amber  ·  HIGH  orange  ·  CRITICAL  red
+```
+
+Type is shown by short codes (SEIS, DSTR, WX, NEO) and the layer panel, not by
+color. The result is a disciplined two tone system instead of a rainbow. Motion
+is restrained and respects `prefers-reduced-motion`.
+
 ## Map toolbar
 
 The strip on the right edge of the map adds:
@@ -112,6 +128,25 @@ React, TypeScript, Vite, Tailwind, Zustand for state, MapLibre GL for the 2D and
 globe engines are loaded on demand so the first paint stays light. The build also
 ships as an installable PWA with offline caching of the app shell and basemap.
 
+Tooling: Vitest for unit tests, ESLint and Prettier, and a GitHub Actions CI
+workflow that type checks, lints, tests, and builds on every push.
+
+## Engineering notes
+
+A few things that go beyond a demo:
+
+- **Resilient ingest.** Every feed has its own refresh cadence, retries with
+  exponential backoff, and a per source circuit breaker that backs a failing
+  source off (up to ten minutes) instead of hammering a dead endpoint. The
+  System Health panel shows live latency, sync age, and failure counts.
+- **Pure, tested parsers.** Each feed exposes a `parse()` function separate from
+  its fetch, unit tested against real and malformed payloads, since upstream
+  shape changes are the most likely break.
+- **Isolation.** Error boundaries wrap every panel and the map engine, so one
+  failing widget can't take down the console.
+- **Graceful states.** Loading, all feeds offline, and empty filter results are
+  all handled explicitly rather than showing a blank panel.
+
 ## Scripts
 
 ```bash
@@ -128,16 +163,24 @@ npm run typecheck    # tsc only, no emit
 
 ```
 src/
-  services/     one file per feed, each returning normalized events
-  hooks/        feed polling and the circuit breaker
-  store.ts      app state (events, threat, filters, view mode)
-  components/   header, map, globe, panels, overlays
-  types.ts      shared types
+  services/        one file per feed (parse + fetch), plus the correlation
+                   engine (threat.ts), shared geo math (geo.ts), and report
+                   export (report.ts)
+  hooks/useFeeds   feed polling, cadence, and the circuit breaker
+  store.ts         app state (events, threat, filters, view mode, cursor)
+  components/      header, panels, overlays
+    map/           map style, layer defs, GeoJSON sources, toolbar
+  *.test.ts        unit tests for the engine, store, and parsers
+  types.ts         shared types
 ```
 
-Adding a layer is three steps: write a fetcher in `services/`, register it in
-`hooks/useFeeds.ts`, and add it to the source list and category map in
-`store.ts`.
+Data flow: `services/*` fetch and normalize into one `IntelEvent` model →
+`useFeeds` ingests into the store on each source's cadence → `threat.ts`
+recomputes the indices and SITREP → components render reactively.
+
+Adding a layer is three steps: write a `parse()` plus `fetch()` in `services/`,
+register it in `hooks/useFeeds.ts`, and add it to the source list and category
+map in `store.ts`.
 
 ## License
 
