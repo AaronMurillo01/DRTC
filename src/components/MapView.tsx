@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl, { type GeoJSONSource } from 'maplibre-gl'
 import { forward as mgrsForward } from 'mgrs'
 import { CloudRain, Flame, Moon, Orbit, Ruler, Satellite } from 'lucide-react'
-import { useStore, visibleEvents } from '../store'
+import { useStore, useVisibleEvents, visibleEvents } from '../store'
 import { STYLE, applyView } from './map/mapStyle'
 import { addDataLayers } from './map/layers'
 import { eventsFC, riskFC, arcsFC, terminatorFC } from './map/sources'
@@ -27,7 +27,7 @@ export default function MapView() {
   const [ruler, setRuler] = useState(false)
   const [measurePts, setMeasurePts] = useState<[number, number][]>([])
 
-  const events = useStore(visibleEvents)
+  const events = useVisibleEvents()
   const risk = useStore((s) => s.countryRisk)
   const select = useStore((s) => s.select)
   const selectedId = useStore((s) => s.selectedId)
@@ -229,14 +229,19 @@ export default function MapView() {
   useEffect(() => {
     const map = mapRef.current
     if (!map || !readyRef.current) return
-    const data: GeoJSON.Feature =
+    const data: GeoJSON.FeatureCollection =
       issTrail.length > 1
         ? {
-            type: 'Feature',
-            geometry: { type: 'LineString', coordinates: issTrail },
-            properties: {},
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                geometry: { type: 'LineString', coordinates: issTrail },
+                properties: {},
+              },
+            ],
           }
-        : { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} }
+        : { type: 'FeatureCollection', features: [] }
     ;(map.getSource('iss-trail') as GeoJSONSource)?.setData(data)
   }, [issTrail])
 

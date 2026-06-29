@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { create } from 'zustand'
 import type {
   Alert,
@@ -405,17 +406,43 @@ function prefsOf(s: DRTCState, patch: Partial<DRTCState>): Prefs {
 }
 
 // Map + globe share this filtered view (category + severity + time window).
-export const visibleEvents = (s: DRTCState): IntelEvent[] => {
-  const range = TIME_RANGES.find((r) => r.key === s.timeRange)!.ms
+function filterVisible(
+  events: IntelEvent[],
+  activeCategories: Set<EventCategory>,
+  minSeverity: number,
+  timeRange: TimeRangeKey,
+): IntelEvent[] {
+  const range = TIME_RANGES.find((r) => r.key === timeRange)!.ms
   const cutoff = Date.now() - range
-  return s.events.filter((e) => {
-    if (!s.activeCategories.has(e.category)) return false
+  return events.filter((e) => {
+    if (!activeCategories.has(e.category)) return false
     if (TIME_EXEMPT.has(e.category)) return true
-    if (e.severity < s.minSeverity) return false
+    if (e.severity < minSeverity) return false
     return e.timestamp >= cutoff
   })
 }
 
-// Intel feed excludes static reference layers (spaceports / nuclear sites).
+export const visibleEvents = (s: DRTCState): IntelEvent[] =>
+  filterVisible(s.events, s.activeCategories, s.minSeverity, s.timeRange)
+
 export const feedEvents = (s: DRTCState): IntelEvent[] =>
   visibleEvents(s).filter((e) => !STATIC_CATEGORIES.has(e.category))
+
+// Memoized hooks: subscribe only to the slices the filter needs, so unrelated
+// state churn (e.g. the cursor readout on every mousemove) does not re-render
+// or re-run setData on the map/feed/globe.
+export function useVisibleEvents(): IntelEvent[] {
+  const events = useStore((s) => s.events)
+  const activeCategories = useStore((s) => s.activeCategories)
+  const minSeverity = useStore((s) => s.minSeverity)
+  const timeRange = useStore((s) => s.timeRange)
+  return useMemo(
+    () => filterVisible(events, activeCategories, minSeverity, timeRange),
+    [events, activeCategories, minSeverity, timeRange],
+  )
+}
+
+export function useFeedEvents(): IntelEvent[] {
+  const visible = useVisibleEvents()
+  return useMemo(() => visible.filter((e) => !STATIC_CATEGORIES.has(e.category)), [visible])
+}

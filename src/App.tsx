@@ -33,15 +33,20 @@ export default function App() {
   const alertCount = useStore((s) => s.alerts.length)
   const audioAlerts = useStore((s) => s.audioAlerts)
   const prevAlerts = useRef(alertCount)
+  const audioCtxRef = useRef<AudioContext | null>(null)
 
   // Sonar ping when a new critical alert arrives (if audio is enabled).
   useEffect(() => {
     if (audioAlerts && alertCount > prevAlerts.current) {
       try {
-        const Ctx =
-          window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-        const ctx = new Ctx()
+        if (!audioCtxRef.current) {
+          const Ctx =
+            window.AudioContext ||
+            (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+          audioCtxRef.current = new Ctx()
+        }
+        const ctx = audioCtxRef.current
+        if (ctx.state === 'suspended') void ctx.resume()
         const t = ctx.currentTime
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
@@ -54,7 +59,6 @@ export default function App() {
         osc.connect(gain).connect(ctx.destination)
         osc.start(t)
         osc.stop(t + 0.36)
-        osc.onended = () => ctx.close()
       } catch {
         /* audio not available */
       }

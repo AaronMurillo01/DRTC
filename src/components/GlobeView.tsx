@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Globe from 'react-globe.gl'
-import { CATEGORY_META, useStore, visibleEvents } from '../store'
+import { CATEGORY_META, useStore, useVisibleEvents } from '../store'
 import { severityColor } from '../utils'
 import type { CountryRisk, IntelEvent } from '../types'
 
@@ -36,7 +36,7 @@ export default function GlobeView() {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [dims, setDims] = useState({ w: 600, h: 600 })
 
-  const events = useStore(visibleEvents)
+  const events = useVisibleEvents()
   const countryRisk = useStore((s) => s.countryRisk)
   const select = useStore((s) => s.select)
   const selectedId = useStore((s) => s.selectedId)

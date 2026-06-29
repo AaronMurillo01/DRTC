@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { ExternalLink, Search } from 'lucide-react'
-import { CATEGORY_META, feedEvents, STATIC_CATEGORIES, useStore } from '../store'
+import { CATEGORY_META, STATIC_CATEGORIES, useFeedEvents, useStore } from '../store'
 import { severityColor, timeAgo } from '../utils'
 
 export default function IntelFeed() {
-  const events = useStore(feedEvents)
+  const events = useFeedEvents()
   const select = useStore((s) => s.select)
   const selectedId = useStore((s) => s.selectedId)
   const query = useStore((s) => s.query)
