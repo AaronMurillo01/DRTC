@@ -74,6 +74,8 @@ The strip on the right edge of the map adds:
   minute.
 - **ORBIT** to slowly spin the earth, which pauses the moment you grab the map.
 - **RADAR** for a live precipitation overlay (RainViewer).
+- **CLOUDS** for live infrared cloud cover (RainViewer satellite), rendered in
+  the blue and white infrared palette.
 - **GND** to draw the ground station network, the tracked spacecraft sub-points,
   and a link line for every station that is in contact right now.
 - **RULER** to measure great circle range and bearing between points you click.

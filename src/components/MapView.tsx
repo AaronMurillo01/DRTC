@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl, { type GeoJSONSource } from 'maplibre-gl'
 import { forward as mgrsForward } from 'mgrs'
-import { CloudRain, Flame, Moon, Orbit, Radio, Ruler, Satellite } from 'lucide-react'
+import { Cloud, CloudRain, Flame, Moon, Orbit, Radio, Ruler, Satellite } from 'lucide-react'
 import { useStore, useVisibleEvents, visibleEvents } from '../store'
 import { STYLE, applyView } from './map/mapStyle'
 import { addDataLayers } from './map/layers'
@@ -15,7 +15,7 @@ import {
   contactsFC,
 } from './map/sources'
 import { MapToolbar, type MapTool } from './map/MapToolbar'
-import { fetchRadarTemplate } from '../services/radar'
+import { fetchRadarTemplate, fetchCloudsTemplate } from '../services/radar'
 import { activeContacts } from '../services/passes'
 import { bearing, haversineKm } from '../services/geo'
 
@@ -33,6 +33,7 @@ export default function MapView() {
   const [night, setNight] = useState(false)
   const [orbit, setOrbit] = useState(false)
   const [radar, setRadar] = useState(false)
+  const [clouds, setClouds] = useState(false)
   const [ruler, setRuler] = useState(false)
   const [ground, setGround] = useState(true)
   const [measurePts, setMeasurePts] = useState<[number, number][]>([])
@@ -332,6 +333,35 @@ export default function MapView() {
     }
   }, [radar])
 
+  // Infrared cloud cover (RainViewer satellite) — add/remove on toggle.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !readyRef.current) return
+    let cancelled = false
+    const remove = () => {
+      if (map.getLayer('clouds')) map.removeLayer('clouds')
+      if (map.getSource('clouds')) map.removeSource('clouds')
+    }
+    if (clouds) {
+      fetchCloudsTemplate()
+        .then((tpl) => {
+          if (cancelled || !tpl || !mapRef.current) return
+          remove()
+          map.addSource('clouds', { type: 'raster', tiles: [tpl], tileSize: 256, maxzoom: 7 })
+          map.addLayer(
+            { id: 'clouds', type: 'raster', source: 'clouds', paint: { 'raster-opacity': 0.45 } },
+            'risk-zone',
+          )
+        })
+        .catch(() => {})
+    } else {
+      remove()
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [clouds])
+
   // Measurement (ruler) vertices/line.
   useEffect(() => {
     const map = mapRef.current
@@ -390,6 +420,7 @@ export default function MapView() {
     { on: night, set: () => setNight((v) => !v), icon: Moon, label: 'DAY/NIGHT' },
     { on: orbit, set: () => setOrbit((v) => !v), icon: Orbit, label: 'ORBIT' },
     { on: radar, set: () => setRadar((v) => !v), icon: CloudRain, label: 'RADAR' },
+    { on: clouds, set: () => setClouds((v) => !v), icon: Cloud, label: 'CLOUDS' },
     { on: ground, set: () => setGround((v) => !v), icon: Radio, label: 'GND' },
     { on: ruler, set: () => setRuler((v) => !v), icon: Ruler, label: 'RULER' },
   ]
