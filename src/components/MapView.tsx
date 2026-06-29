@@ -1,13 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl, { type GeoJSONSource } from 'maplibre-gl'
 import { forward as mgrsForward } from 'mgrs'
-import { CloudRain, Flame, Moon, Orbit, Ruler, Satellite } from 'lucide-react'
+import { CloudRain, Flame, Moon, Orbit, Radio, Ruler, Satellite } from 'lucide-react'
 import { useStore, useVisibleEvents, visibleEvents } from '../store'
 import { STYLE, applyView } from './map/mapStyle'
 import { addDataLayers } from './map/layers'
-import { eventsFC, riskFC, arcsFC, terminatorFC } from './map/sources'
+import {
+  eventsFC,
+  riskFC,
+  arcsFC,
+  terminatorFC,
+  groundStationsFC,
+  satellitesFC,
+  contactsFC,
+} from './map/sources'
 import { MapToolbar, type MapTool } from './map/MapToolbar'
 import { fetchRadarTemplate } from '../services/radar'
+import { activeContacts } from '../services/passes'
 import { bearing, haversineKm } from '../services/geo'
 
 export default function MapView() {
@@ -25,6 +34,7 @@ export default function MapView() {
   const [orbit, setOrbit] = useState(false)
   const [radar, setRadar] = useState(false)
   const [ruler, setRuler] = useState(false)
+  const [ground, setGround] = useState(true)
   const [measurePts, setMeasurePts] = useState<[number, number][]>([])
 
   const events = useVisibleEvents()
@@ -33,6 +43,11 @@ export default function MapView() {
   const selectedId = useStore((s) => s.selectedId)
   const viewMode = useStore((s) => s.viewMode)
   const issTrail = useStore((s) => s.issTrail)
+  const groundStations = useStore((s) => s.groundStations)
+  const passes = useStore((s) => s.passes)
+  const satPositions = useStore((s) => s.satPositions)
+  const selectedStationId = useStore((s) => s.selectedStationId)
+  const selectStation = useStore((s) => s.selectStation)
 
   rulerRef.current = ruler
 
@@ -71,6 +86,21 @@ export default function MapView() {
       ;(map.getSource('events') as GeoJSONSource)?.setData(eventsFC(visibleEvents(st)))
       ;(map.getSource('risk') as GeoJSONSource)?.setData(riskFC(st.countryRisk))
       ;(map.getSource('arcs') as GeoJSONSource)?.setData(arcsFC(st.countryRisk, visibleEvents(st)))
+
+      // Ground segment overlay (initial paint + default-on visibility).
+      const active0 = activeContacts(st.passes, Date.now())
+      const activeIds0 = new Set(active0.map((p) => p.stationId))
+      ;(map.getSource('gstations') as GeoJSONSource)?.setData(
+        groundStationsFC(st.groundStations, activeIds0, st.selectedStationId),
+      )
+      ;(map.getSource('satellites') as GeoJSONSource)?.setData(satellitesFC(st.satPositions))
+      ;(map.getSource('contacts') as GeoJSONSource)?.setData(
+        contactsFC(active0, st.satPositions, st.groundStations),
+      )
+      const gndVis = ground ? 'visible' : 'none'
+      for (const id of ['gs-ring', 'gs-pt', 'sat-pt', 'contact-line']) {
+        map.setLayoutProperty(id, 'visibility', gndVis)
+      }
       applyView(map, st.viewMode)
 
       const showPopup = (e: maplibregl.MapLayerMouseEvent) => {
@@ -101,6 +131,34 @@ export default function MapView() {
         const current = useStore.getState().selectedId
         select(current === id ? null : id)
       })
+      // Ground-station hover + click (select to filter the schedule).
+      const showGsPopup = (e: maplibregl.MapLayerMouseEvent) => {
+        map.getCanvas().style.cursor = 'pointer'
+        const f = e.features?.[0]
+        if (!f) return
+        const p = f.properties as Record<string, string>
+        popupRef.current
+          ?.setLngLat((f.geometry as GeoJSON.Point).coordinates as [number, number])
+          .setHTML(
+            `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#f3f4f5;max-width:200px">
+               <b>${p.name}</b><div style="color:#71747a;font-size:10px">${p.operator} · ground station</div></div>`,
+          )
+          .addTo(map)
+      }
+      map.on('mouseenter', 'gs-pt', showGsPopup)
+      map.on('mousemove', 'gs-pt', showGsPopup)
+      map.on('mouseleave', 'gs-pt', () => {
+        map.getCanvas().style.cursor = ''
+        popupRef.current?.remove()
+      })
+      map.on('click', 'gs-pt', (e) => {
+        if (rulerRef.current) return
+        const id = e.features?.[0]?.properties?.id as string | undefined
+        if (!id) return
+        const current = useStore.getState().selectedStationId
+        selectStation(current === id ? null : id)
+      })
+
       // Ruler adds vertices; otherwise empty-map click clears the selection.
       map.on('click', (e) => {
         if (rulerRef.current) {
@@ -301,12 +359,38 @@ export default function MapView() {
     if (!ruler) setMeasurePts([])
   }, [ruler])
 
+  // Ground-segment data: stations, sub-points, and live contact links.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !readyRef.current) return
+    const active = activeContacts(passes, Date.now())
+    const activeIds = new Set(active.map((p) => p.stationId))
+    ;(map.getSource('gstations') as GeoJSONSource)?.setData(
+      groundStationsFC(groundStations, activeIds, selectedStationId),
+    )
+    ;(map.getSource('satellites') as GeoJSONSource)?.setData(satellitesFC(satPositions))
+    ;(map.getSource('contacts') as GeoJSONSource)?.setData(
+      contactsFC(active, satPositions, groundStations),
+    )
+  }, [groundStations, passes, satPositions, selectedStationId])
+
+  // Ground-segment overlay visibility.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !readyRef.current) return
+    const vis = ground ? 'visible' : 'none'
+    for (const id of ['gs-ring', 'gs-pt', 'sat-pt', 'contact-line']) {
+      if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis)
+    }
+  }, [ground])
+
   const tools: MapTool[] = [
     { on: satellite, set: () => setSatellite((v) => !v), icon: Satellite, label: 'SAT' },
     { on: heatmap, set: () => setHeatmap((v) => !v), icon: Flame, label: 'HEAT' },
     { on: night, set: () => setNight((v) => !v), icon: Moon, label: 'DAY/NIGHT' },
     { on: orbit, set: () => setOrbit((v) => !v), icon: Orbit, label: 'ORBIT' },
     { on: radar, set: () => setRadar((v) => !v), icon: CloudRain, label: 'RADAR' },
+    { on: ground, set: () => setGround((v) => !v), icon: Radio, label: 'GND' },
     { on: ruler, set: () => setRuler((v) => !v), icon: Ruler, label: 'RULER' },
   ]
 
@@ -329,7 +413,7 @@ export default function MapView() {
       <div ref={containerRef} className="absolute inset-0" />
       <MapToolbar tools={tools} />
       {ruler && (
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-3 py-1 rounded-sm bg-cmd-bg/90 border border-cmd-accent/50 font-mono text-[10px]">
+        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-3 py-1 rounded-sm bg-cmd-bg/90 border border-cmd-accent/50 font-mono text-[10px] whitespace-nowrap">
           <span className="text-cmd-accent">RULER</span>
           {measure ? (
             <>

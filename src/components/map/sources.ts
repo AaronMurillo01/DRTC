@@ -1,7 +1,13 @@
 // GeoJSON FeatureCollection builders for the map's data sources.
 import { CATEGORY_META } from '../../store'
 import { greatCircle, haversineKm, subsolarPoint, D2R } from '../../services/geo'
-import type { CountryRisk, IntelEvent } from '../../types'
+import type {
+  ContactWindow,
+  CountryRisk,
+  GroundStation,
+  IntelEvent,
+  SatPosition,
+} from '../../types'
 
 export function eventsFC(events: IntelEvent[]): GeoJSON.FeatureCollection {
   return {
@@ -51,6 +57,63 @@ export function arcsFC(risk: CountryRisk[], events: IntelEvent[]): GeoJSON.Featu
       },
       properties: { color: CATEGORY_META[x.e.category].color },
     }))
+  return { type: 'FeatureCollection', features }
+}
+
+// Ground-station network markers (with active/selected flags for styling).
+export function groundStationsFC(
+  stations: GroundStation[],
+  activeIds: Set<string>,
+  selectedId: string | null,
+): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: stations.map((st) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [st.lng, st.lat] },
+      properties: {
+        id: st.id,
+        name: st.name,
+        operator: st.operator,
+        active: activeIds.has(st.id) ? 1 : 0,
+        selected: st.id === selectedId ? 1 : 0,
+      },
+    })),
+  }
+}
+
+// Live sub-satellite points for the tracked constellation.
+export function satellitesFC(positions: SatPosition[]): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: positions.map((s) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [s.lng, s.lat] },
+      properties: { id: s.id, name: s.name, alt: Math.round(s.altKm) },
+    })),
+  }
+}
+
+// Active-contact links: great-circle line from station to the bird's sub-point.
+export function contactsFC(
+  active: ContactWindow[],
+  positions: SatPosition[],
+  stations: GroundStation[],
+): GeoJSON.FeatureCollection {
+  const features: GeoJSON.Feature[] = []
+  for (const p of active) {
+    const sat = positions.find((s) => s.id === p.satId)
+    const st = stations.find((s) => s.id === p.stationId)
+    if (!sat || !st) continue
+    features.push({
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: greatCircle([st.lng, st.lat], [sat.lng, sat.lat]),
+      },
+      properties: {},
+    })
+  }
   return { type: 'FeatureCollection', features }
 }
 

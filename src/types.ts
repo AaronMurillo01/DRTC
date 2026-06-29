@@ -94,6 +94,62 @@ export interface Alert {
   eventId: string
 }
 
+// --- Ground segment: ground-station network + satellite contact planning ---
+
+/** A TT&C / payload-downlink ground station in a (GSaaS) network. */
+export interface GroundStation {
+  id: string
+  name: string
+  /** network operator, e.g. KSAT, Leaf Space, RBC Signals, NASA NEN, ESA Estrack */
+  operator: string
+  lat: number
+  lng: number
+  /** supported RF bands */
+  bands: string[]
+  /** elevation mask in degrees — passes below this can't close a link */
+  minElevDeg: number
+}
+
+/** A spacecraft being tracked for pass planning, with its current TLE. */
+export interface TrackedSat {
+  id: number
+  name: string
+  line1: string
+  line2: string
+}
+
+/** Live SGP4-propagated sub-satellite point. */
+export interface SatPosition {
+  id: number
+  name: string
+  lat: number
+  lng: number
+  altKm: number
+  velocityKmS: number
+}
+
+/** A predicted contact window (pass) of a satellite over a ground station. */
+export interface ContactWindow {
+  id: string
+  satId: number
+  satName: string
+  stationId: string
+  stationName: string
+  operator: string
+  /** epoch ms */
+  aos: number
+  los: number
+  durationSec: number
+  maxElevationDeg: number
+  startAz: number
+  endAz: number
+  /** band selected for the link budget estimate */
+  band: string
+  downlinkMbps: number
+  /** rough payload volume that could be downlinked over the pass (megabytes) */
+  volumeMb: number
+}
+
 export type ThreatLevel = 1 | 2 | 3 | 4 | 5
 
 export interface ThreatState {

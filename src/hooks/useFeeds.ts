@@ -10,6 +10,8 @@ import { fetchNuclear, fetchSpaceports } from '../services/static'
 import { fetchAirQuality } from '../services/airquality'
 import { fetchWeather } from '../services/weather'
 import { fetchNeos } from '../services/neo'
+import { fetchTLEs } from '../services/tle'
+import { computePasses } from '../services/passes'
 import type { IntelEvent } from '../types'
 
 interface FeedSpec {
@@ -56,6 +58,30 @@ const FEEDS: FeedSpec[] = [
       const { neos, latencyMs } = await fetchNeos()
       useStore.getState().setNeos(neos)
       return { latencyMs, count: neos.length }
+    },
+  },
+  // Ground segment: refresh TLEs when stale, then re-run SGP4 pass prediction
+  // over the ground-station network every minute so the schedule stays current.
+  {
+    id: 'groundlink',
+    intervalMs: 60_000,
+    run: async () => {
+      const st = useStore.getState()
+      let sats = st.trackedSats
+      let latencyMs = 0
+      const stale = !st.tleFetchedAt || Date.now() - st.tleFetchedAt > 1_800_000
+      if (sats.length === 0 || stale) {
+        const res = await fetchTLEs()
+        sats = res.sats
+        latencyMs = res.latencyMs
+        useStore.getState().setTrackedSats(sats)
+      }
+      const { passes, positions } = computePasses(sats, st.groundStations, Date.now(), {
+        horizonHours: 12,
+        stepSec: 30,
+      })
+      useStore.getState().setPasses(passes, positions)
+      return { latencyMs, count: passes.length }
     },
   },
   // Static reference layers — load once, refresh rarely.

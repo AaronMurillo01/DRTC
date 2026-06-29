@@ -2,17 +2,22 @@ import { useMemo } from 'react'
 import { create } from 'zustand'
 import type {
   Alert,
+  ContactWindow,
   CountryRisk,
   EventCategory,
   FeedSource,
+  GroundStation,
   IntelEvent,
   MarketTick,
   Neo,
+  SatPosition,
   ThreatState,
   TimeRangeKey,
+  TrackedSat,
   ViewMode,
 } from './types'
 import { buildBrief, computeCountryRisk, computeThreat } from './services/threat'
+import { GROUND_STATIONS } from './services/groundstations'
 
 export const CATEGORY_META: Record<EventCategory, { label: string; color: string; short: string }> =
   {
@@ -101,6 +106,18 @@ interface DRTCState {
   issTrail: [number, number][]
   /** sonar ping on new critical alerts */
   audioAlerts: boolean
+  /** ground-station network (reference data) */
+  groundStations: GroundStation[]
+  /** spacecraft being tracked for pass planning + their TLEs */
+  trackedSats: TrackedSat[]
+  /** epoch ms of the last successful TLE refresh */
+  tleFetchedAt: number | null
+  /** predicted contact windows over the network, sorted by AOS */
+  passes: ContactWindow[]
+  /** live SGP4 sub-satellite points for the tracked constellation */
+  satPositions: SatPosition[]
+  /** currently selected ground station (for the map + panel) */
+  selectedStationId: string | null
 
   setSourceStatus: (id: string, patch: Partial<FeedSource>) => void
   ingest: (sourceId: string, events: IntelEvent[]) => void
@@ -119,6 +136,9 @@ interface DRTCState {
   setCursor: (c: { lat: number; lng: number; mgrs: string } | null) => void
   pushIssTrail: (p: [number, number]) => void
   toggleAudio: () => void
+  setTrackedSats: (sats: TrackedSat[]) => void
+  setPasses: (passes: ContactWindow[], positions: SatPosition[]) => void
+  selectStation: (id: string | null) => void
   dismissAlert: (id: string) => void
   clearAlerts: () => void
 }
@@ -256,6 +276,18 @@ const INITIAL_SOURCES: FeedSource[] = [
     consecutiveFailures: 0,
     syncs: 0,
   },
+  {
+    id: 'groundlink',
+    label: 'Ground Link (SGP4)',
+    category: 'orbital',
+    status: 'pending',
+    lastSync: null,
+    count: 0,
+    latencyMs: null,
+    latencyHistory: [],
+    consecutiveFailures: 0,
+    syncs: 0,
+  },
 ]
 
 const prefs = loadPrefs()
@@ -294,6 +326,12 @@ export const useStore = create<DRTCState>((set) => ({
   cursor: null,
   issTrail: [],
   audioAlerts: false,
+  groundStations: GROUND_STATIONS,
+  trackedSats: [],
+  tleFetchedAt: null,
+  passes: [],
+  satPositions: [],
+  selectedStationId: null,
 
   setSourceStatus: (id, patch) =>
     set((s) => ({ sources: { ...s.sources, [id]: { ...s.sources[id], ...patch } } })),
@@ -385,6 +423,9 @@ export const useStore = create<DRTCState>((set) => ({
   setCursor: (c) => set({ cursor: c }),
   pushIssTrail: (p) => set((s) => ({ issTrail: [...s.issTrail, p].slice(-150) })),
   toggleAudio: () => set((s) => ({ audioAlerts: !s.audioAlerts })),
+  setTrackedSats: (sats) => set({ trackedSats: sats, tleFetchedAt: Date.now() }),
+  setPasses: (passes, positions) => set({ passes, satPositions: positions }),
+  selectStation: (id) => set({ selectedStationId: id }),
   dismissAlert: (id) => set((s) => ({ alerts: s.alerts.filter((a) => a.id !== id) })),
   clearAlerts: () => set({ alerts: [] }),
 }))

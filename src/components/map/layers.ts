@@ -10,6 +10,9 @@ export function addDataLayers(map: maplibregl.Map) {
   map.addSource('terminator', { type: 'geojson', data: terminatorFC(new Date()) })
   map.addSource('iss-trail', { type: 'geojson', data: empty })
   map.addSource('measure', { type: 'geojson', data: empty })
+  map.addSource('gstations', { type: 'geojson', data: empty })
+  map.addSource('contacts', { type: 'geojson', data: empty })
+  map.addSource('satellites', { type: 'geojson', data: empty })
 
   map.addLayer({
     id: 'terminator-fill',
@@ -141,6 +144,71 @@ export function addDataLayers(map: maplibregl.Map) {
       'line-color': 'rgba(226,231,238,0.45)',
       'line-width': 1,
       'line-dasharray': [2, 2],
+    },
+  })
+
+  // --- Ground segment overlay (toggled with the GND tool) ---
+
+  // Active TT&C contact links: station → bird sub-point.
+  map.addLayer({
+    id: 'contact-line',
+    type: 'line',
+    source: 'contacts',
+    layout: { visibility: 'none', 'line-cap': 'round' },
+    paint: {
+      'line-color': '#46a883',
+      'line-width': 1.1,
+      'line-opacity': 0.7,
+      'line-dasharray': [2, 2],
+    },
+  })
+
+  // Coverage halo around each ground station.
+  map.addLayer({
+    id: 'gs-ring',
+    type: 'circle',
+    source: 'gstations',
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 0, 6, 4, 26],
+      'circle-color': ['case', ['==', ['get', 'active'], 1], '#46a883', '#71747a'],
+      'circle-opacity': 0.07,
+      'circle-blur': 0.5,
+    },
+  })
+
+  // Ground-station markers (square-ish: a small diamond reads as infrastructure).
+  map.addLayer({
+    id: 'gs-pt',
+    type: 'circle',
+    source: 'gstations',
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-radius': ['case', ['==', ['get', 'selected'], 1], 5, 3.4],
+      'circle-color': [
+        'case',
+        ['==', ['get', 'active'], 1],
+        '#46a883',
+        ['==', ['get', 'selected'], 1],
+        '#f4642a',
+        '#9aa0a6',
+      ],
+      'circle-stroke-color': '#070707',
+      'circle-stroke-width': 1.2,
+    },
+  })
+
+  // Tracked spacecraft sub-points.
+  map.addLayer({
+    id: 'sat-pt',
+    type: 'circle',
+    source: 'satellites',
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-radius': 3,
+      'circle-color': '#e2e7ee',
+      'circle-stroke-color': '#070707',
+      'circle-stroke-width': 1,
     },
   })
 

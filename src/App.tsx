@@ -5,6 +5,7 @@ import Header from './components/Header'
 import TimeRange from './components/TimeRange'
 import IntelFeed from './components/IntelFeed'
 import ThreatPanel from './components/ThreatPanel'
+import GroundSegment from './components/GroundSegment'
 import InstabilityPanel from './components/InstabilityPanel'
 import MarketTicker from './components/MarketTicker'
 import NeoPanel from './components/NeoPanel'
@@ -135,6 +136,9 @@ export default function App() {
         <div className="order-3 xl:order-none flex flex-col gap-2.5 min-h-0 xl:overflow-y-auto">
           <ErrorBoundary label="THREAT">
             <ThreatPanel />
+          </ErrorBoundary>
+          <ErrorBoundary label="GROUND SEGMENT">
+            <GroundSegment />
           </ErrorBoundary>
           <ErrorBoundary label="CII">
             <InstabilityPanel />

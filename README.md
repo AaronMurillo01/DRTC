@@ -25,6 +25,11 @@ backend to run. Open it and it starts streaming.
 - **Instability index.** A proximity weighted stress score for 20 watch list
   countries, built from a geopolitical baseline plus nearby live events, with
   the top drivers called out per country.
+- **Ground segment.** A live satellite pass planner. DRTC pulls fresh orbital
+  elements for a tracked constellation, propagates them with SGP4, and works out
+  every upcoming contact window over a worldwide ground station network. The
+  schedule reads like a real tasking board: which bird, which station, time to
+  acquisition, peak elevation, duration, RF band, and a rough downlink budget.
 - **Intel stream.** A ranked feed of every event with full text search and a
   minimum severity slider that filter both the list and the map.
 - **SITREP.** A plain language situation summary generated from the current
@@ -69,6 +74,8 @@ The strip on the right edge of the map adds:
   minute.
 - **ORBIT** to slowly spin the earth, which pauses the moment you grab the map.
 - **RADAR** for a live precipitation overlay (RainViewer).
+- **GND** to draw the ground station network, the tracked spacecraft sub-points,
+  and a link line for every station that is in contact right now.
 - **RULER** to measure great circle range and bearing between points you click.
 
 You also get a live MGRS and lat/lon readout under the cursor, a time range
@@ -84,6 +91,27 @@ connect the most unstable country to the events driving its score, and a live
   a new critical track appears, so you can run the board unattended.
 - **Reports.** Export a formatted SITREP (Markdown) or the full common operating
   picture (JSON).
+
+## Ground segment
+
+The Ground Segment panel turns DRTC into a small mission planning aid. It tracks
+a representative LEO constellation (the ISS, Hubble, Landsat 9, NOAA 20,
+Sentinel-2A, and Aqua) and a worldwide ground station network spanning the major
+commercial and agency providers (KSAT, Leaf Space, RBC Signals, AWS Ground
+Station, NASA Near Earth Network, ESA Estrack, and Atlas).
+
+Every minute it refreshes orbital elements when they go stale, runs an SGP4
+propagation for each spacecraft over the next twelve hours, and steps the orbit
+forward to find each contact window: the moments a bird climbs above a station's
+elevation mask. For each pass it records acquisition and loss of signal, peak
+elevation, duration, and azimuths, then attaches a first order downlink budget
+from the station's best RF band. Contacts that are open right now are pulled to
+the top and counted as live links, and selecting a station on the map filters the
+schedule to just that site.
+
+The pass engine is pure and time injected, so the whole thing is unit tested
+against a known orbit rather than wall clock luck. The COMSEC line is a nod to
+how these links actually run: encrypted and CCSDS framed.
 
 ## Works on any screen
 
@@ -107,6 +135,7 @@ Everything here is free and needs no key.
 | Air quality | Open-Meteo (global cities) |
 | Space weather | NOAA SWPC |
 | ISS position | wheretheiss.at |
+| Orbital elements (TLE) | CelesTrak via tle.ivanstanojevic.me |
 | Signals | GDELT |
 | Near-Earth objects | NASA NeoWs |
 | Precipitation radar | RainViewer |
@@ -137,9 +166,10 @@ api.nasa.gov for higher rate limits.
 ## Stack
 
 React, TypeScript, Vite, Tailwind, Zustand for state, MapLibre GL for the 2D and
-3D map, and three.js (through react-globe.gl) for the stylized globe. The map and
-globe engines are loaded on demand so the first paint stays light. The build also
-ships as an installable PWA with offline caching of the app shell and basemap.
+3D map, three.js (through react-globe.gl) for the stylized globe, and satellite.js
+for SGP4 orbit propagation behind the ground segment. The map and globe engines
+are loaded on demand so the first paint stays light. The build also ships as an
+installable PWA with offline caching of the app shell and basemap.
 
 Tooling: Vitest for unit tests, ESLint and Prettier, and a GitHub Actions CI
 workflow that type checks, lints, tests, and builds on every push.
