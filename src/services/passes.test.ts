@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { activeContacts, computePasses, subpoint } from './passes'
+import { activeContacts, computePasses, skyTrack, subpoint } from './passes'
 import { GROUND_STATIONS } from './groundstations'
 import type { TrackedSat } from '../types'
 
@@ -59,6 +59,21 @@ describe('computePasses', () => {
       expect(p.startAz).toBeLessThanOrEqual(360)
       expect(p.downlinkMbps).toBeGreaterThan(0)
       expect(p.volumeMb).toBeGreaterThan(0)
+      expect(Number.isFinite(p.dopplerKHz)).toBe(true)
+      expect(p.dopplerKHz).toBeGreaterThanOrEqual(0)
+    }
+  })
+
+  it('builds a sky track within the polar-plot bounds', () => {
+    const p = passes.find((x) => x.satId === 25544)!
+    const st = GROUND_STATIONS.find((s) => s.id === p.stationId)!
+    const track = skyTrack(ISS, st, p.aos, p.los, 24)
+    expect(track.length).toBeGreaterThan(2)
+    for (const s of track) {
+      expect(s.el).toBeGreaterThanOrEqual(0)
+      expect(s.el).toBeLessThanOrEqual(90)
+      expect(s.az).toBeGreaterThanOrEqual(0)
+      expect(s.az).toBeLessThanOrEqual(360)
     }
   })
 

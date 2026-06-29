@@ -103,11 +103,18 @@ Station, NASA Near Earth Network, ESA Estrack, and Atlas).
 Every minute it refreshes orbital elements when they go stale, runs an SGP4
 propagation for each spacecraft over the next twelve hours, and steps the orbit
 forward to find each contact window: the moments a bird climbs above a station's
-elevation mask. For each pass it records acquisition and loss of signal, peak
-elevation, duration, and azimuths, then attaches a first order downlink budget
-from the station's best RF band. Contacts that are open right now are pulled to
-the top and counted as live links, and selecting a station on the map filters the
-schedule to just that site.
+elevation mask. Coarse 30 second sampling brackets each rise and set, then a
+bisection refines acquisition and loss of signal to about a second, and a
+ternary search pins the true peak elevation. For every pass it records peak
+elevation, duration, the start and end azimuths, a first order downlink budget
+from the station's best RF band, and a Doppler shift estimate at the carrier
+frequency, which is the number an SDR or software modem has to chase.
+
+The top of the panel is a sky track: an azimuth and elevation polar plot of the
+selected pass, north up, horizon at the rim and zenith at the center, with the
+acquisition, culmination, and loss points marked. Pick any pass in the schedule
+to plot it. Contacts that are open right now are pulled to the top and counted as
+live links, and selecting a station on the map filters the schedule to that site.
 
 The pass engine is pure and time injected, so the whole thing is unit tested
 against a known orbit rather than wall clock luck. The COMSEC line is a nod to

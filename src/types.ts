@@ -148,6 +148,14 @@ export interface ContactWindow {
   downlinkMbps: number
   /** rough payload volume that could be downlinked over the pass (megabytes) */
   volumeMb: number
+  /** peak Doppler shift magnitude near the horizon, kHz, for the band carrier */
+  dopplerKHz: number
+}
+
+/** One sample of a pass as seen from the ground: azimuth + elevation, degrees. */
+export interface SkySample {
+  az: number
+  el: number
 }
 
 export type ThreatLevel = 1 | 2 | 3 | 4 | 5

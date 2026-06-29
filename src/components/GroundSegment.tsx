@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Radio, Satellite, ShieldCheck, X } from 'lucide-react'
 import { useStore } from '../store'
 import { GROUND_OPERATORS } from '../services/groundstations'
-import type { ContactWindow } from '../types'
+import { skyTrack } from '../services/passes'
+import type { ContactWindow, SkySample } from '../types'
 
 function countdown(ms: number): string {
   const s = Math.max(0, Math.round(ms / 1000))
@@ -29,6 +30,11 @@ function vol(mb: number): string {
   return `${(mb * 1000).toFixed(0)} kB`
 }
 
+function dopp(khz: number): string {
+  if (khz >= 1000) return `±${(khz / 1000).toFixed(1)} MHz`
+  return `±${khz < 10 ? khz.toFixed(1) : Math.round(khz)} kHz`
+}
+
 export default function GroundSegment() {
   const passes = useStore((s) => s.passes)
   const satPositions = useStore((s) => s.satPositions)
@@ -36,6 +42,8 @@ export default function GroundSegment() {
   const trackedSats = useStore((s) => s.trackedSats)
   const selectedStationId = useStore((s) => s.selectedStationId)
   const selectStation = useStore((s) => s.selectStation)
+
+  const [selectedPassId, setSelectedPassId] = useState<string | null>(null)
 
   // Tick once per second so the AOS/LOS countdowns stay live.
   const [now, setNow] = useState(() => Date.now())
@@ -57,6 +65,12 @@ export default function GroundSegment() {
   )
   const upcoming = useMemo(() => scoped.filter((p) => p.aos > now).slice(0, 30), [scoped, now])
   const nextAos = upcoming[0]
+
+  // The pass shown in the sky-plot card: explicit pick, else live, else next.
+  const focus = useMemo(() => {
+    const picked = selectedPassId && scoped.find((p) => p.id === selectedPassId)
+    return picked || active[0] || upcoming[0] || null
+  }, [selectedPassId, scoped, active, upcoming])
 
   const acquiring = passes.length === 0 && trackedSats.length === 0
 
@@ -95,6 +109,9 @@ export default function GroundSegment() {
         </div>
       )}
 
+      {/* Sky-track card for the focused pass */}
+      {focus && <PassCard p={focus} now={now} live={now >= focus.aos && now <= focus.los} />}
+
       {/* Active contacts */}
       {active.length > 0 && (
         <div className="border-b border-cmd-border">
@@ -102,7 +119,14 @@ export default function GroundSegment() {
             ● In Contact
           </div>
           {active.map((p) => (
-            <ContactRow key={p.id} p={p} now={now} live />
+            <ContactRow
+              key={p.id}
+              p={p}
+              now={now}
+              live
+              selected={p.id === focus?.id}
+              onPick={() => setSelectedPassId(p.id)}
+            />
           ))}
         </div>
       )}
@@ -123,7 +147,13 @@ export default function GroundSegment() {
           </div>
         )}
         {upcoming.map((p) => (
-          <ContactRow key={p.id} p={p} now={now} />
+          <ContactRow
+            key={p.id}
+            p={p}
+            now={now}
+            selected={p.id === focus?.id}
+            onPick={() => setSelectedPassId(p.id)}
+          />
         ))}
       </div>
 
@@ -153,13 +183,147 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   )
 }
 
-function ContactRow({ p, now, live }: { p: ContactWindow; now: number; live?: boolean }) {
-  const select = useStore((s) => s.selectStation)
+function PassCard({ p, now, live }: { p: ContactWindow; now: number; live: boolean }) {
+  const sats = useStore((s) => s.trackedSats)
+  const stations = useStore((s) => s.groundStations)
+  const track = useMemo(() => {
+    const sat = sats.find((s) => s.id === p.satId)
+    const st = stations.find((s) => s.id === p.stationId)
+    if (!sat || !st) return [] as SkySample[]
+    return skyTrack(sat, st, p.aos, p.los, 40)
+  }, [sats, stations, p])
+
+  const t = live ? p.los - now : p.aos - now
+  return (
+    <div className="flex gap-2.5 px-2 py-2 border-b border-cmd-border bg-white/[0.015]">
+      <SkyPlot track={track} accent={live ? '#46a883' : '#f4642a'} />
+      <div className="min-w-0 flex-1 flex flex-col justify-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <Satellite size={12} className={live ? 'text-cmd-green' : 'text-cmd-accent'} />
+          <span className="text-[12px] text-cmd-text font-semibold truncate">{p.satName}</span>
+          <span
+            className={`font-mono text-[10px] ml-auto ${live ? 'text-cmd-green' : 'text-cmd-accent'}`}
+          >
+            {live ? `LOS T-${countdown(t)}` : `AOS T-${countdown(t)}`}
+          </span>
+        </div>
+        <div className="font-mono text-[9px] text-cmd-dim truncate">
+          {p.stationName} · {p.operator}
+        </div>
+        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono text-[9px] mt-0.5">
+          <Field k="MAX EL" v={`${Math.round(p.maxElevationDeg)}°`} />
+          <Field k="DUR" v={dur(p.durationSec)} />
+          <Field k="AOS" v={clockZ(p.aos)} />
+          <Field k="BAND" v={`${p.band} · ${dopp(p.dopplerKHz)}`} />
+          <Field k="AZ" v={`${Math.round(p.startAz)}→${Math.round(p.endAz)}°`} />
+          <Field k="DOWNLINK" v={vol(p.volumeMb)} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Field({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="flex items-baseline gap-1 min-w-0">
+      <span className="text-cmd-dim/70 tracking-wider shrink-0">{k}</span>
+      <span className="text-cmd-text truncate">{v}</span>
+    </div>
+  )
+}
+
+// Azimuth/elevation polar plot: north up, horizon at the rim, zenith at center.
+function SkyPlot({ track, accent }: { track: SkySample[]; accent: string }) {
+  const S = 86
+  const c = S / 2
+  const R = c - 9
+  const pt = (s: SkySample) => {
+    const r = ((90 - s.el) / 90) * R
+    const a = s.az * (Math.PI / 180)
+    return [c + r * Math.sin(a), c - r * Math.cos(a)] as const
+  }
+  const path = track.map((s) => pt(s).join(',')).join(' ')
+  const peak = track.reduce((m, s) => (s.el > m.el ? s : m), track[0] ?? { az: 0, el: 0 })
+  const aos = track[0]
+  const los = track[track.length - 1]
+
+  return (
+    <svg width={S} height={S} className="shrink-0" aria-label="sky track">
+      {/* elevation rings: 0 (rim), 30, 60 */}
+      {[0, 30, 60].map((el) => (
+        <circle
+          key={el}
+          cx={c}
+          cy={c}
+          r={((90 - el) / 90) * R}
+          fill="none"
+          stroke="#262629"
+          strokeWidth={0.8}
+        />
+      ))}
+      <line x1={c} y1={c - R} x2={c} y2={c + R} stroke="#262629" strokeWidth={0.8} />
+      <line x1={c - R} y1={c} x2={c + R} y2={c} stroke="#262629" strokeWidth={0.8} />
+      {(['N', 'E', 'S', 'W'] as const).map((d, i) => {
+        const pos = [
+          [c, 6],
+          [S - 5, c + 3],
+          [c, S - 2],
+          [3, c + 3],
+        ][i]
+        return (
+          <text
+            key={d}
+            x={pos[0]}
+            y={pos[1]}
+            fontSize={6}
+            fill="#71747a"
+            textAnchor="middle"
+            fontFamily="monospace"
+          >
+            {d}
+          </text>
+        )
+      })}
+      {track.length > 1 && (
+        <polyline points={path} fill="none" stroke={accent} strokeWidth={1.4} opacity={0.9} />
+      )}
+      {aos && <circle cx={pt(aos)[0]} cy={pt(aos)[1]} r={2} fill={accent} />}
+      {los && <circle cx={pt(los)[0]} cy={pt(los)[1]} r={2} fill="#71747a" />}
+      {track.length > 0 && (
+        <circle
+          cx={pt(peak)[0]}
+          cy={pt(peak)[1]}
+          r={2.4}
+          fill="none"
+          stroke={accent}
+          strokeWidth={1.2}
+        />
+      )}
+    </svg>
+  )
+}
+
+function ContactRow({
+  p,
+  now,
+  live,
+  selected,
+  onPick,
+}: {
+  p: ContactWindow
+  now: number
+  live?: boolean
+  selected?: boolean
+  onPick: () => void
+}) {
   const t = live ? p.los - now : p.aos - now
   return (
     <button
-      onClick={() => select(p.stationId)}
-      className="w-full text-left px-2 py-1.5 border-b border-cmd-border/40 last:border-0 hover:bg-cmd-panel2 transition-colors"
+      onClick={onPick}
+      className={`w-full text-left px-2 py-1.5 border-b border-cmd-border/40 last:border-0 hover:bg-cmd-panel2 transition-colors ${
+        selected ? 'bg-cmd-panel2' : ''
+      }`}
+      style={selected ? { boxShadow: `inset 2px 0 0 ${live ? '#46a883' : '#f4642a'}` } : undefined}
     >
       <div className="flex items-center gap-2">
         <Satellite
