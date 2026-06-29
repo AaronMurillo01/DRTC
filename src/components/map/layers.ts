@@ -102,7 +102,7 @@ export function addDataLayers(map: maplibregl.Map) {
       'circle-radius': ['interpolate', ['linear'], ['get', 'sev'], 0, 3, 100, 11],
       'circle-color': ['get', 'color'],
       'circle-opacity': 0.9,
-      'circle-stroke-color': '#070b12',
+      'circle-stroke-color': '#070707',
       'circle-stroke-width': ['case', ['>=', ['get', 'sev'], 85], 1.5, 0.6],
     },
   })

@@ -29,7 +29,7 @@ export default function NeoPanel() {
         {top.map((n) => (
           <div
             key={n.id}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.03] border border-white/5"
+            className="flex items-center gap-2 px-2 py-1.5 rounded-sm bg-white/[0.02] border border-white/5"
           >
             <span
               className={`w-1.5 h-1.5 rounded-full shrink-0 ${n.hazardous ? 'bg-cmd-red' : 'bg-[#c4b5fd]'}`}

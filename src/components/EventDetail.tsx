@@ -13,7 +13,7 @@ export default function EventDetail() {
 
   return (
     <div
-      className="absolute top-14 right-2 w-72 max-w-[calc(100%-1rem)] panel bg-cmd-panel/95 backdrop-blur z-20"
+      className="absolute top-14 right-2 w-72 max-w-[calc(100%-1rem)] panel z-20"
       style={{ borderColor: meta.color + '66', boxShadow: `0 0 24px ${meta.color}22` }}
     >
       <div className="panel-header" style={{ color: meta.color }}>

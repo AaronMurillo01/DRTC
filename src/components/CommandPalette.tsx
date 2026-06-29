@@ -94,8 +94,8 @@ export default function CommandPalette() {
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-[520px] max-w-[90vw] panel border-cmd-accent/40"
-        style={{ boxShadow: '0 0 40px rgba(34,211,238,0.15)' }}
+        className="w-[520px] max-w-[90vw] panel"
+        style={{ boxShadow: '0 24px 60px -20px rgba(0,0,0,0.9)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 px-3 py-2.5 border-b border-cmd-border">

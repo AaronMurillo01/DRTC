@@ -74,7 +74,7 @@ export default function ThreatPanel() {
       <div className="p-3 flex items-center gap-4">
         <div className="relative shrink-0">
           <svg width="104" height="104" className="-rotate-90">
-            <circle cx="52" cy="52" r={r} fill="none" stroke="#1b2430" strokeWidth="7" />
+            <circle cx="52" cy="52" r={r} fill="none" stroke="#26262a" strokeWidth="7" />
             <circle
               cx="52"
               cy="52"

@@ -5,16 +5,16 @@ export default function TimeRange() {
   const setTimeRange = useStore((s) => s.setTimeRange)
 
   return (
-    <div className="absolute top-2 left-2 z-10 flex items-center gap-0.5 p-1 rounded-md bg-cmd-panel/90 backdrop-blur border border-cmd-border">
+    <div className="absolute top-2 left-2 z-10 flex items-center gap-0.5 p-1 rounded-sm bg-cmd-bg/90 border border-cmd-border">
       {TIME_RANGES.map((r) => {
         const on = r.key === timeRange
         return (
           <button
             key={r.key}
             onClick={() => setTimeRange(r.key)}
-            className={`px-2.5 py-1 rounded font-mono text-[10px] tracking-wider transition-colors ${
+            className={`px-2.5 py-1 rounded-sm font-mono text-[10px] tracking-wider transition-colors ${
               on
-                ? 'bg-cmd-green text-cmd-bg font-bold'
+                ? 'bg-cmd-accent text-cmd-bg font-bold'
                 : 'text-cmd-dim hover:text-cmd-text hover:bg-cmd-panel2'
             }`}
           >

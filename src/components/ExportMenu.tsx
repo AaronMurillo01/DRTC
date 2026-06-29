@@ -46,7 +46,7 @@ export default function ExportMenu() {
         <Download size={12} /> EXPORT
       </button>
       {open && (
-        <div className="absolute right-0 mt-1 w-48 panel bg-cmd-panel/95 backdrop-blur z-50">
+        <div className="absolute right-0 mt-1 w-48 panel z-50">
           <button
             onClick={exportSITREP}
             className="w-full flex items-center gap-2 px-3 py-2 hover:bg-cmd-panel2 text-left"

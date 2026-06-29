@@ -17,8 +17,8 @@ export default function AlertsOverlay() {
         return (
           <div
             key={a.id}
-            className="panel bg-cmd-panel/95 backdrop-blur animate-[slidein_.25s_ease-out]"
-            style={{ borderColor: '#f8717188', boxShadow: '0 0 24px rgba(248,113,113,0.25)' }}
+            className="panel animate-[slidein_.25s_ease-out]"
+            style={{ borderColor: '#d94a3d88' }}
           >
             <div className="flex items-start gap-2 p-2.5">
               <AlertTriangle size={15} className="text-cmd-red shrink-0 mt-0.5 animate-flicker" />

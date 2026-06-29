@@ -37,13 +37,13 @@ export const STYLE: StyleSpecification = {
     world: { type: 'geojson', data: '/world.geo.json' },
   },
   layers: [
-    { id: 'bg', type: 'background', paint: { 'background-color': '#070b12' } },
-    { id: 'land', type: 'fill', source: 'world', paint: { 'fill-color': '#10202f' } },
+    { id: 'bg', type: 'background', paint: { 'background-color': '#070707' } },
+    { id: 'land', type: 'fill', source: 'world', paint: { 'fill-color': '#131315' } },
     {
       id: 'land-border',
       type: 'line',
       source: 'world',
-      paint: { 'line-color': '#274056', 'line-width': 0.5, 'line-opacity': 0.7 },
+      paint: { 'line-color': '#33333a', 'line-width': 0.5, 'line-opacity': 0.8 },
     },
     { id: 'carto', type: 'raster', source: 'carto', paint: { 'raster-opacity': 0.92 } },
     { id: 'satellite', type: 'raster', source: 'satellite', layout: { visibility: 'none' } },

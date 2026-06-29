@@ -45,13 +45,13 @@ export default function MapView() {
 
     map.on('load', () => {
       map.setSky({
-        'sky-color': '#0a1420',
-        'horizon-color': '#0d1f2c',
-        'fog-color': '#070b12',
+        'sky-color': '#0c0c0e',
+        'horizon-color': '#161618',
+        'fog-color': '#070707',
         'sky-horizon-blend': 0.5,
         'horizon-fog-blend': 0.5,
         'fog-ground-blend': 0.5,
-        'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 0.8, 6, 0],
+        'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 0.7, 6, 0],
       })
       addDataLayers(map)
       readyRef.current = true
@@ -70,8 +70,8 @@ export default function MapView() {
         popupRef.current
           ?.setLngLat((f.geometry as GeoJSON.Point).coordinates as [number, number])
           .setHTML(
-            `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#d4dde8;max-width:200px">
-               <b>${p.title}</b><div style="color:#6b7c90;font-size:10px">${p.cat} · SEV ${p.sev}</div></div>`,
+            `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#f3f4f5;max-width:200px">
+               <b>${p.title}</b><div style="color:#71747a;font-size:10px">${p.cat} · SEV ${p.sev}</div></div>`,
           )
           .addTo(map)
       }

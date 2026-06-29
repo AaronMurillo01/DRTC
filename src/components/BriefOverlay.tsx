@@ -7,7 +7,7 @@ export default function BriefOverlay() {
   const [open, setOpen] = useState(true)
 
   return (
-    <div className="absolute top-14 left-2 w-72 max-w-[40%] panel bg-cmd-panel/90 backdrop-blur z-10 border-cmd-accent/30 hidden md:flex">
+    <div className="absolute top-14 left-2 w-72 max-w-[40%] panel z-10 hidden md:flex">
       <button
         onClick={() => setOpen((o) => !o)}
         className="panel-header w-full hover:text-cmd-text transition-colors"

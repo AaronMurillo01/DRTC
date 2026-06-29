@@ -35,14 +35,14 @@ export default function Header() {
   const color = LEVEL_COLOR[threat.level]
 
   return (
-    <header className="shrink-0 h-16 flex items-center justify-between px-3 sm:px-5 border-b border-cmd-border/70 bg-gradient-to-b from-cmd-panel2/80 to-cmd-panel/60 backdrop-blur">
+    <header className="shrink-0 h-16 flex items-center justify-between px-3 sm:px-5 border-b border-cmd-border bg-cmd-bg">
       {/* Brand */}
       <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
         <div className="relative shrink-0">
-          <div className="w-9 h-9 rounded-lg border border-cmd-accent/40 bg-cmd-accent/5 flex items-center justify-center shadow-glow">
+          <div className="w-9 h-9 rounded-sm border border-cmd-border flex items-center justify-center">
             <Radio size={17} className="text-cmd-accent" />
           </div>
-          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cmd-green ring-2 ring-cmd-bg animate-flicker" />
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cmd-accent ring-2 ring-cmd-bg animate-flicker" />
         </div>
         <div className="leading-tight min-w-0">
           <div className="font-mono font-bold tracking-[0.28em] text-cmd-text text-[15px]">
@@ -61,13 +61,8 @@ export default function Header() {
             CONDITION
           </span>
           <div
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border font-mono"
-            style={{
-              borderColor: `${color}55`,
-              color,
-              background: `${color}14`,
-              boxShadow: `0 0 20px -6px ${color}`,
-            }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-sm border font-mono"
+            style={{ borderColor: `${color}66`, color, background: `${color}12` }}
           >
             <Activity size={13} />
             <span className="text-sm font-bold tracking-wide glow-text">
@@ -96,7 +91,7 @@ export default function Header() {
         {/* Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2 border-l border-cmd-border/70 pl-3 sm:pl-5">
           {/* view toggle */}
-          <div className="flex items-center p-0.5 rounded-full border border-white/10 bg-white/5">
+          <div className="flex items-center p-0.5 rounded-sm border border-cmd-border">
             {(
               [
                 ['2d', '2D'],
@@ -110,10 +105,8 @@ export default function Header() {
                 title={
                   m === '3d' ? '3D terrain map' : m === 'globe' ? 'Stylized globe' : 'Flat map'
                 }
-                className={`px-3 py-1 rounded-full font-mono text-[10px] font-bold tracking-wider transition-all duration-200 ${
-                  viewMode === m
-                    ? 'bg-cmd-accent text-cmd-bg shadow-glow'
-                    : 'text-cmd-dim hover:text-cmd-text'
+                className={`px-3 py-1 rounded-sm font-mono text-[10px] font-bold tracking-wider transition-colors duration-150 ${
+                  viewMode === m ? 'bg-cmd-accent text-cmd-bg' : 'text-cmd-dim hover:text-cmd-text'
                 }`}
               >
                 {label}
