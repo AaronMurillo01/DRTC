@@ -81,9 +81,17 @@ export default function MapView() {
         map.getCanvas().style.cursor = ''
         popupRef.current?.remove()
       })
+      // Click a track to select it; click it again to deselect.
       map.on('click', 'events-pt', (e) => {
         const id = e.features?.[0]?.properties?.id as string | undefined
-        if (id) select(id)
+        if (!id) return
+        const current = useStore.getState().selectedId
+        select(current === id ? null : id)
+      })
+      // Click empty map (no track under the cursor) to clear the selection.
+      map.on('click', (e) => {
+        const hits = map.queryRenderedFeatures(e.point, { layers: ['events-pt'] })
+        if (!hits.length) select(null)
       })
 
       map.on('mousemove', (e) => {

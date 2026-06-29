@@ -122,7 +122,11 @@ export default function GlobeView() {
         }
         pointResolution={6}
         pointLabel={(d: object) => pointTooltip(d as IntelEvent)}
-        onPointClick={(d: object) => select((d as IntelEvent).id)}
+        onPointClick={(d: object) => {
+          const id = (d as IntelEvent).id
+          select(selectedId === id ? null : id)
+        }}
+        onGlobeClick={() => select(null)}
         ringsData={rings}
         ringLat={(d: object) => (d as IntelEvent).lat!}
         ringLng={(d: object) => (d as IntelEvent).lng!}
