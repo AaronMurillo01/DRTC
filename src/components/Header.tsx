@@ -42,7 +42,7 @@ export default function Header() {
           <div className="w-9 h-9 rounded-sm border border-cmd-border flex items-center justify-center">
             <Radio size={17} className="text-cmd-accent" />
           </div>
-          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cmd-accent ring-2 ring-cmd-bg animate-flicker" />
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cmd-accent ring-2 ring-cmd-bg animate-pulseDot" />
         </div>
         <div className="leading-tight min-w-0">
           <div className="font-mono font-bold tracking-[0.28em] text-cmd-text text-[15px]">
@@ -106,7 +106,9 @@ export default function Header() {
                   m === '3d' ? '3D terrain map' : m === 'globe' ? 'Stylized globe' : 'Flat map'
                 }
                 className={`px-3 py-1 rounded-sm font-mono text-[10px] font-bold tracking-wider transition-colors duration-150 ${
-                  viewMode === m ? 'bg-cmd-accent text-cmd-bg' : 'text-cmd-dim hover:text-cmd-text'
+                  viewMode === m
+                    ? 'bg-cmd-accent text-cmd-bg accent-glow'
+                    : 'text-cmd-dim hover:text-cmd-text'
                 }`}
               >
                 {label}

@@ -91,7 +91,10 @@ export default function ThreatPanel() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-mono text-2xl font-bold" style={{ color }}>
+            <span
+              className="font-mono text-3xl font-extralight tabular-nums tracking-tight glow-text"
+              style={{ color }}
+            >
               {threat.index}
             </span>
             <span className="font-mono text-[8px] text-cmd-dim tracking-widest">/ 100</span>
@@ -99,7 +102,7 @@ export default function ThreatPanel() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-mono text-[9px] text-cmd-dim tracking-widest mb-1">CONDITION</div>
-          <div className="font-mono text-lg font-bold" style={{ color }}>
+          <div className="font-mono text-lg font-semibold glow-text" style={{ color }}>
             {threat.level} · {threat.label}
           </div>
           <div className="mt-2 space-y-1">

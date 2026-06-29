@@ -46,11 +46,21 @@ export default {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.7' },
         },
+        panelIn: {
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        pulseDot: {
+          '0%, 100%': { opacity: '1', boxShadow: '0 0 0 0 rgba(244,100,42,0.55)' },
+          '70%': { opacity: '0.85', boxShadow: '0 0 0 5px rgba(244,100,42,0)' },
+        },
       },
       animation: {
         ping2: 'ping2 1.6s cubic-bezier(0,0,0.2,1) infinite',
         sweep: 'sweep 3s linear infinite',
         flicker: 'flicker 2s ease-in-out infinite',
+        panelIn: 'panelIn 0.45s cubic-bezier(0.22,1,0.36,1) both',
+        pulseDot: 'pulseDot 2.4s ease-in-out infinite',
       },
     },
   },
