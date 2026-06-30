@@ -99,6 +99,14 @@ async def ground_stations() -> dict:
     return {"groundStations": [g.model_dump(by_alias=True) for g in store.ground_stations]}
 
 
+@app.get("/api/conjunctions")
+async def conjunctions(alerts_only: bool = False) -> dict:
+    items = store.conjunctions
+    if alerts_only:
+        items = [c for c in items if c.alert]
+    return {"conjunctions": [c.model_dump(by_alias=True) for c in items]}
+
+
 @app.get("/api/passes/{pass_id}/skytrack")
 async def pass_skytrack(pass_id: str) -> dict:
     p = next((x for x in store.passes if x.id == pass_id), None)

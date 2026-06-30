@@ -59,6 +59,7 @@ the write path (ingestion) and the read path (the gateway clients talk to).
 | `app/ingest/feeds.py` | Async fetch + normalize for each upstream into the `Event` model |
 | `app/ingest/scheduler.py` | One task per feed + the ground-link worker; circuit breakers; publishes deltas |
 | `app/orbital/passes.py` | SGP4 pass prediction (AOS/LOS, peak elevation, Doppler, link budget) |
+| `app/orbital/conjunctions.py` | Pairwise close-approach screening (TCA, miss distance, relative speed) |
 | `app/orbital/geo.py` | TEME to ECEF to topocentric look angles (the astrodynamics) |
 | `app/store.py` | In-memory snapshot, the single source of truth |
 | `app/broker.py` | Pub/sub fan-out with a Redis-swappable interface |
@@ -75,6 +76,7 @@ the write path (ingestion) and the read path (the gateway clients talk to).
 | `GET /api/sources` | Feed health (status, latency, failures) |
 | `GET /api/threat` | Current threat state |
 | `GET /api/passes` | Contact windows, filter by `station_id` or `sat_id` |
+| `GET /api/conjunctions` | Closest approaches between tracked objects (`alerts_only`) |
 | `GET /api/ground-stations` | The ground-station network |
 | `POST /api/skytrack` | Server-side az/el track for a pass |
 | `WS /ws` | Snapshot on connect, then live deltas |
@@ -85,7 +87,7 @@ the write path (ingestion) and the read path (the gateway clients talk to).
    into Redis, so multiple gateway replicas share state.
 2. Persist events to **TimescaleDB / PostGIS** for history, replay, and geo
    queries.
-3. Add **conjunction screening** (close approaches between tracked objects) and a
-   **contact scheduler** (resolve station contention with a constraint solver).
+3. Add a **contact scheduler** that resolves station contention with a constraint
+   solver. (Conjunction screening is already in `app/orbital/conjunctions.py`.)
 4. Containerize the whole stack (Docker Compose is already here) and add
    Prometheus metrics + Grafana.

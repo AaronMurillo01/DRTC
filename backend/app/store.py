@@ -11,6 +11,7 @@ import time
 
 from .orbital.groundstations import GROUND_STATIONS
 from .schemas import (
+    ConjunctionModel,
     ContactWindowModel,
     Event,
     GroundStationModel,
@@ -44,6 +45,7 @@ class Store:
         ]
         self.sat_positions: list[SatPositionModel] = []
         self.passes: list[ContactWindowModel] = []
+        self.conjunctions: list[ConjunctionModel] = []
 
     def register_source(self, src: Source) -> None:
         self.sources[src.id] = src
@@ -66,6 +68,7 @@ class Store:
             ground_stations=self.ground_stations,
             sat_positions=self.sat_positions,
             passes=self.passes,
+            conjunctions=self.conjunctions,
             server_time=now_ms(),
         )
 

@@ -86,6 +86,18 @@ class ContactWindowModel(_Base):
     doppler_khz: float
 
 
+class ConjunctionModel(_Base):
+    id: str
+    a_id: int
+    a_name: str
+    b_id: int
+    b_name: str
+    tca: float
+    miss_km: float
+    rel_speed_km_s: float
+    alert: bool
+
+
 class Snapshot(_Base):
     """Full state sent to a client on connect."""
 
@@ -95,6 +107,7 @@ class Snapshot(_Base):
     ground_stations: list[GroundStationModel]
     sat_positions: list[SatPositionModel]
     passes: list[ContactWindowModel]
+    conjunctions: list[ConjunctionModel]
     server_time: int
 
 
