@@ -51,6 +51,11 @@ the write path (ingestion) and the read path (the gateway clients talk to).
   endpoint backs off exponentially without affecting the others.
 - **CPU offload.** Pass prediction over the full station network is CPU bound, so
   it runs in a thread (`asyncio.to_thread`) and never blocks the event loop.
+- **Pluggable backend.** The broker and snapshot cache sit behind interfaces,
+  resolved once at startup (`app/runtime.py`). With no config they are in-process;
+  with `DRTC_REDIS_URL` set they become Redis-backed, so ingest in one process
+  fans out to websocket clients held by other gateway replicas, and a replica that
+  does not run ingest still serves the current snapshot from the shared cache.
 
 ## Components
 
@@ -63,7 +68,9 @@ the write path (ingestion) and the read path (the gateway clients talk to).
 | `app/orbital/planning.py` | Contact scheduling (OR-Tools CP-SAT no-overlap contention model) |
 | `app/orbital/geo.py` | TEME to ECEF to topocentric look angles (the astrodynamics) |
 | `app/store.py` | In-memory snapshot, the single source of truth |
-| `app/broker.py` | Pub/sub fan-out with a Redis-swappable interface |
+| `app/broker.py` | Pub/sub fan-out: in-memory or Redis implementation |
+| `app/cache.py` | Shared snapshot cache (null or Redis) for multi-replica reads |
+| `app/runtime.py` | Resolves broker + cache at startup from config |
 | `app/main.py` | FastAPI gateway: REST endpoints + websocket |
 | `app/threat.py` | Correlation engine (heuristic threat index) |
 
@@ -93,12 +100,7 @@ own pollers and orbital engines, so the static deploy is unaffected.
 
 ## Scaling path (next phases)
 
-1. Swap the in-process broker for **Redis pub/sub** and move the snapshot cache
-   into Redis, so multiple gateway replicas share state.
-2. Persist events to **TimescaleDB / PostGIS** for history, replay, and geo
-   queries.
-3. Persist events to **TimescaleDB / PostGIS** for history, replay and geo
-   queries. (Conjunction screening and the CP-SAT contact scheduler are already
-   in `app/orbital/`.)
-4. Containerize the whole stack (Docker Compose is already here) and add
-   Prometheus metrics + Grafana.
+1. Persist events to **TimescaleDB / PostGIS** for history, replay, and geo
+   queries. (The Redis broker + snapshot cache, conjunction screening, and the
+   CP-SAT contact scheduler are already in place.)
+2. Add **Prometheus metrics + Grafana** on the backend.

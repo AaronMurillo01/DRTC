@@ -50,7 +50,7 @@ All settings are environment variables prefixed `DRTC_` (see `app/config.py`):
 | `DRTC_PASS_HORIZON_HOURS` | `12` | Pass-prediction look-ahead |
 | `DRTC_PASS_STEP_SEC` | `30` | Coarse propagation step |
 | `DRTC_TLE_REFRESH_SEC` | `1800` | How often to refresh TLEs |
-| `DRTC_REDIS_URL` | unset | Reserved for the Redis broker swap |
+| `DRTC_REDIS_URL` | unset | When set, use the Redis broker + shared snapshot cache (multi-replica) |
 
 ## Layout
 
@@ -59,7 +59,9 @@ app/
   main.py            FastAPI gateway: REST + websocket
   config.py          env-driven settings
   store.py           in-memory snapshot (source of truth)
-  broker.py          pub/sub fan-out
+  broker.py          pub/sub fan-out (in-memory or Redis)
+  cache.py           shared snapshot cache (null or Redis)
+  runtime.py         resolves broker + cache at startup
   threat.py          correlation / threat index
   ingest/
     feeds.py         async fetch + normalize per upstream

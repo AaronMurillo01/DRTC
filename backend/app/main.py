@@ -15,10 +15,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from .broker import broker
 from .config import settings
 from .ingest.scheduler import scheduler
 from .orbital.passes import TrackedSat, sky_track
+from .runtime import runtime
 from .store import now_ms, store
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
@@ -27,11 +27,13 @@ log = logging.getLogger("drtc")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    await runtime.startup()
     await scheduler.start()
     try:
         yield
     finally:
         await scheduler.stop()
+        await runtime.shutdown()
 
 
 app = FastAPI(title="DRTC Backend", version="0.1.0", lifespan=lifespan)
@@ -51,7 +53,7 @@ async def health() -> dict:
         "serverTime": now_ms(),
         "sourcesOnline": len(live),
         "sourcesTotal": len(store.sources),
-        "subscribers": broker.subscriber_count,
+        "subscribers": runtime.broker.subscriber_count,
         "passes": len(store.passes),
     }
 
@@ -136,10 +138,11 @@ async def pass_skytrack(pass_id: str) -> dict:
 @app.websocket("/ws")
 async def ws(websocket: WebSocket) -> None:
     await websocket.accept()
-    # Send the full snapshot first, then stream deltas.
-    snap = store.snapshot().model_dump(by_alias=True)
+    # Send the full snapshot first, then stream deltas. Prefer the shared cache
+    # (so a replica not running ingest is still correct), else the local store.
+    snap = await runtime.cache.read() or store.snapshot().model_dump(by_alias=True)
     await websocket.send_json({"type": "snapshot", "payload": snap})
-    async with broker.subscribe() as queue:
+    async with runtime.broker.subscribe() as queue:
         try:
             while True:
                 msg = await queue.get()

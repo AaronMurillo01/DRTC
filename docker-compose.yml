@@ -1,6 +1,10 @@
-# DRTC full stack. The backend runs standalone with an in-process broker by
-# default. Bring up the `scale` profile to add Redis, the swap target for the
-# broker + cache when running more than one gateway replica.
+# DRTC stack. The backend runs standalone with an in-process broker by default
+# (`docker compose up`). The `scale` profile adds Redis and a second gateway
+# replica that shares the broker + snapshot cache, so ingest in one process
+# reaches websocket clients held by the other:
+#
+#   docker compose --profile scale up
+#
 services:
   backend:
     build: ./backend
@@ -8,7 +12,22 @@ services:
       - "8000:8000"
     environment:
       DRTC_CORS_ORIGINS: "*"
-      # DRTC_REDIS_URL: "redis://redis:6379/0"   # enable with the scale profile
+      # Set when running the scale profile (Redis is required for that path).
+      # DRTC_REDIS_URL: "redis://redis:6379/0"
+    restart: unless-stopped
+
+  # A second gateway replica, active only under the scale profile. It shares
+  # state with `backend` through Redis.
+  gateway:
+    build: ./backend
+    profiles: ["scale"]
+    ports:
+      - "8001:8000"
+    environment:
+      DRTC_CORS_ORIGINS: "*"
+      DRTC_REDIS_URL: "redis://redis:6379/0"
+    depends_on:
+      - redis
     restart: unless-stopped
 
   redis:

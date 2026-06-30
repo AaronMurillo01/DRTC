@@ -14,12 +14,12 @@ import time
 
 import httpx
 
-from ..broker import broker
 from ..config import settings
 from ..orbital.conjunctions import screen_conjunctions
 from ..orbital.groundstations import GROUND_STATIONS
 from ..orbital.passes import compute_passes
 from ..orbital.planning import plan_contacts
+from ..runtime import runtime
 from ..schemas import (
     ConjunctionModel,
     ContactWindowModel,
@@ -48,7 +48,8 @@ def _init_sources() -> None:
 async def _publish_threat() -> None:
     prev = store.threat.index
     store.threat = compute_threat(store.all_events(), prev)
-    await broker.publish({"type": "threat", "payload": store.threat.model_dump(by_alias=True)})
+    payload = store.threat.model_dump(by_alias=True)
+    await runtime.broker.publish({"type": "threat", "payload": payload})
 
 
 async def _run_feed(spec: FeedSpec, client: httpx.AsyncClient) -> None:
@@ -75,11 +76,10 @@ async def _run_feed(spec: FeedSpec, client: httpx.AsyncClient) -> None:
             )
             # Send the full merged set so the client can replace wholesale.
             all_events = [e.model_dump(by_alias=True) for e in store.all_events()]
-            await broker.publish({"type": "events", "payload": {"events": all_events}})
+            await runtime.broker.publish({"type": "events", "payload": {"events": all_events}})
             await _publish_threat()
-            await broker.publish(
-                {"type": "sources", "payload": _sources_payload()}
-            )
+            await runtime.broker.publish({"type": "sources", "payload": _sources_payload()})
+            await _cache_snapshot()
             failures = 0
             await asyncio.sleep(spec.interval_sec)
         except asyncio.CancelledError:
@@ -96,7 +96,7 @@ async def _run_feed(spec: FeedSpec, client: httpx.AsyncClient) -> None:
                     }
                 )
             )
-            await broker.publish({"type": "sources", "payload": _sources_payload()})
+            await runtime.broker.publish({"type": "sources", "payload": _sources_payload()})
             backoff = min(_MAX_BACKOFF, spec.interval_sec * (2 ** min(failures, 6)))
             log.warning("feed %s failed (%s); backing off %.0fs", spec.id, exc, backoff)
             await asyncio.sleep(backoff)
@@ -152,7 +152,7 @@ async def _run_groundlink(client: httpx.AsyncClient) -> None:
                     }
                 )
             )
-            await broker.publish(
+            await runtime.broker.publish(
                 {
                     "type": "passes",
                     "payload": {
@@ -163,7 +163,8 @@ async def _run_groundlink(client: httpx.AsyncClient) -> None:
                     },
                 }
             )
-            await broker.publish({"type": "sources", "payload": _sources_payload()})
+            await runtime.broker.publish({"type": "sources", "payload": _sources_payload()})
+            await _cache_snapshot()
             failures = 0
             await asyncio.sleep(settings.groundlink_interval)
         except asyncio.CancelledError:
@@ -187,6 +188,11 @@ async def _run_groundlink(client: httpx.AsyncClient) -> None:
 
 def _sources_payload() -> dict:
     return {"sources": [s.model_dump(by_alias=True) for s in store.sources.values()]}
+
+
+async def _cache_snapshot() -> None:
+    """Publish the latest full snapshot to the shared cache (no-op in-memory)."""
+    await runtime.cache.write(store.snapshot().model_dump(by_alias=True))
 
 
 class Scheduler:
