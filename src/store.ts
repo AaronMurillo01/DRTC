@@ -11,6 +11,7 @@ import type {
   IntelEvent,
   MarketTick,
   Neo,
+  ReplayFrame,
   SatPosition,
   ThreatState,
   TimeRangeKey,
@@ -110,6 +111,10 @@ interface DRTCState {
   audioAlerts: boolean
   /** live-backend connection state (off when running standalone) */
   liveStatus: LiveStatus
+  /** rolling history frames for replay / time-travel */
+  replayFrames: ReplayFrame[]
+  /** scrubbed replay instant (epoch ms), or null when following live */
+  replayAt: number | null
   /** ground-station network (reference data) */
   groundStations: GroundStation[]
   /** spacecraft being tracked for pass planning + their TLEs */
@@ -147,6 +152,8 @@ interface DRTCState {
   setConjunctions: (conjunctions: Conjunction[]) => void
   selectStation: (id: string | null) => void
   setLiveStatus: (s: LiveStatus) => void
+  pushReplayFrame: (frame: ReplayFrame) => void
+  setReplayAt: (ts: number | null) => void
   setLiveEvents: (events: IntelEvent[]) => void
   setThreat: (threat: ThreatState) => void
   mergeSources: (sources: Partial<FeedSource>[]) => void
@@ -338,6 +345,8 @@ export const useStore = create<DRTCState>((set) => ({
   issTrail: [],
   audioAlerts: false,
   liveStatus: 'off',
+  replayFrames: [],
+  replayAt: null,
   groundStations: GROUND_STATIONS,
   trackedSats: [],
   tleFetchedAt: null,
@@ -441,6 +450,9 @@ export const useStore = create<DRTCState>((set) => ({
   setConjunctions: (conjunctions) => set({ conjunctions }),
   selectStation: (id) => set({ selectedStationId: id }),
   setLiveStatus: (s) => set({ liveStatus: s }),
+  pushReplayFrame: (frame) =>
+    set((s) => ({ replayFrames: [...s.replayFrames, frame].slice(-180) })),
+  setReplayAt: (ts) => set({ replayAt: ts }),
   setLiveEvents: (events) => set({ events: [...events].sort((a, b) => b.timestamp - a.timestamp) }),
   setThreat: (threat) =>
     set((s) => ({ threat, threatHistory: [...s.threatHistory, threat.index].slice(-60) })),
@@ -495,9 +507,10 @@ function filterVisible(
   activeCategories: Set<EventCategory>,
   minSeverity: number,
   timeRange: TimeRangeKey,
+  now: number = Date.now(),
 ): IntelEvent[] {
   const range = TIME_RANGES.find((r) => r.key === timeRange)!.ms
-  const cutoff = Date.now() - range
+  const cutoff = now - range
   return events.filter((e) => {
     if (!activeCategories.has(e.category)) return false
     if (TIME_EXEMPT.has(e.category)) return true
@@ -520,10 +533,29 @@ export function useVisibleEvents(): IntelEvent[] {
   const activeCategories = useStore((s) => s.activeCategories)
   const minSeverity = useStore((s) => s.minSeverity)
   const timeRange = useStore((s) => s.timeRange)
+  const replayAt = useStore((s) => s.replayAt)
+  const replayFrames = useStore((s) => s.replayFrames)
+  // In replay, swap in the recorded events and anchor the time window to the
+  // scrubbed instant so the picture reads as it did then.
+  const { source, now } = useMemo(() => {
+    if (replayAt == null) return { source: events, now: Date.now() }
+    const frame = frameAt(replayFrames, replayAt)
+    return { source: frame ? frame.events : events, now: replayAt }
+  }, [events, replayAt, replayFrames])
   return useMemo(
-    () => filterVisible(events, activeCategories, minSeverity, timeRange),
-    [events, activeCategories, minSeverity, timeRange],
+    () => filterVisible(source, activeCategories, minSeverity, timeRange, now),
+    [source, activeCategories, minSeverity, timeRange, now],
   )
+}
+
+/** The recorded frame in effect at `ts` (the most recent one at or before it). */
+export function frameAt(frames: ReplayFrame[], ts: number): ReplayFrame | null {
+  let found: ReplayFrame | null = null
+  for (const f of frames) {
+    if (f.ts <= ts) found = f
+    else break
+  }
+  return found ?? frames[0] ?? null
 }
 
 export function useFeedEvents(): IntelEvent[] {

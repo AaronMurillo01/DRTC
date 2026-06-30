@@ -44,6 +44,9 @@ backend to run. Open it and it starts streaming.
   minimum severity slider that filter both the list and the map.
 - **SITREP.** A plain language situation summary generated from the current
   picture. No model calls, just rules over the live data.
+- **Replay.** A timeline under the map records the picture as it streams, so you
+  can scrub back in time and watch how the map and threat index got to now, then
+  snap back to live. The backend also persists the same history for durability.
 - **Alerts.** New high severity tracks raise a dismissable toast and a header
   badge. A warm up pass keeps the first batch of historical events from flooding
   the log.

@@ -114,6 +114,23 @@ async def plan() -> dict:
     return {"plan": store.plan.model_dump(by_alias=True) if store.plan else None}
 
 
+@app.get("/api/history")
+async def history(since: int | None = None, limit: int = 240) -> dict:
+    frames = await asyncio.to_thread(runtime.history.frames, since, limit)
+    return {
+        "frames": [
+            {"ts": f.ts, "index": f.threat_index, "level": f.threat_level, "count": f.event_count}
+            for f in frames
+        ]
+    }
+
+
+@app.get("/api/history/frame")
+async def history_frame(at: int) -> dict:
+    events = await asyncio.to_thread(runtime.history.frame_events, at)
+    return {"at": at, "events": events}
+
+
 @app.get("/api/passes/{pass_id}/skytrack")
 async def pass_skytrack(pass_id: str) -> dict:
     p = next((x for x in store.passes if x.id == pass_id), None)

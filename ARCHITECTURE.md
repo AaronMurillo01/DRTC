@@ -70,7 +70,8 @@ the write path (ingestion) and the read path (the gateway clients talk to).
 | `app/store.py` | In-memory snapshot, the single source of truth |
 | `app/broker.py` | Pub/sub fan-out: in-memory or Redis implementation |
 | `app/cache.py` | Shared snapshot cache (null or Redis) for multi-replica reads |
-| `app/runtime.py` | Resolves broker + cache at startup from config |
+| `app/history.py` | Append-only event history (SQLite; Postgres/TimescaleDB-ready) |
+| `app/runtime.py` | Resolves broker + cache + history at startup from config |
 | `app/main.py` | FastAPI gateway: REST endpoints + websocket |
 | `app/threat.py` | Correlation engine (heuristic threat index) |
 
@@ -86,6 +87,8 @@ the write path (ingestion) and the read path (the gateway clients talk to).
 | `GET /api/passes` | Contact windows, filter by `station_id` or `sat_id` |
 | `GET /api/conjunctions` | Closest approaches between tracked objects (`alerts_only`) |
 | `GET /api/ground-stations` | The ground-station network |
+| `GET /api/history` | Recorded threat-index frames for the replay timeline |
+| `GET /api/history/frame` | The located events as of a past instant (`at`) |
 | `POST /api/skytrack` | Server-side az/el track for a pass |
 | `WS /ws` | Snapshot on connect, then live deltas |
 
@@ -100,7 +103,8 @@ own pollers and orbital engines, so the static deploy is unaffected.
 
 ## Scaling path (next phases)
 
-1. Persist events to **TimescaleDB / PostGIS** for history, replay, and geo
-   queries. (The Redis broker + snapshot cache, conjunction screening, and the
-   CP-SAT contact scheduler are already in place.)
+1. Point the history store at **PostgreSQL / TimescaleDB** for durable, long
+   retention and geo queries (the SQLite store uses a portable append-only
+   schema). The Redis broker + snapshot cache, conjunction screening, the CP-SAT
+   contact scheduler, and event-history replay are already in place.
 2. Add **Prometheus metrics + Grafana** on the backend.

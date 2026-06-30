@@ -195,6 +195,31 @@ async def _cache_snapshot() -> None:
     await runtime.cache.write(store.snapshot().model_dump(by_alias=True))
 
 
+async def _run_recorder() -> None:
+    """Persist a history frame on a fixed cadence, for replay / time-travel."""
+    while True:
+        await asyncio.sleep(settings.history_interval)
+        located = [
+            {
+                "id": e.id,
+                "lat": e.lat,
+                "lng": e.lng,
+                "severity": e.severity,
+                "category": e.category,
+                "title": e.title,
+            }
+            for e in store.all_events()
+            if e.lat is not None and e.lng is not None
+        ]
+        await asyncio.to_thread(
+            runtime.history.record,
+            now_ms(),
+            store.threat.index,
+            store.threat.level,
+            located,
+        )
+
+
 class Scheduler:
     def __init__(self) -> None:
         self._tasks: list[asyncio.Task] = []
@@ -208,6 +233,7 @@ class Scheduler:
         for spec in FEEDS:
             self._tasks.append(asyncio.create_task(_run_feed(spec, self._client)))
         self._tasks.append(asyncio.create_task(_run_groundlink(self._client)))
+        self._tasks.append(asyncio.create_task(_run_recorder()))
         log.info("scheduler started with %d feeds", len(FEEDS) + 1)
 
     async def stop(self) -> None:

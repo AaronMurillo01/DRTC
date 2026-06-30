@@ -158,6 +158,14 @@ export interface SkySample {
   el: number
 }
 
+/** A recorded moment of the picture, for replay / time-travel. */
+export interface ReplayFrame {
+  ts: number
+  index: number
+  level: number
+  events: IntelEvent[]
+}
+
 /** A screened close approach between two tracked objects (conjunction). */
 export interface Conjunction {
   id: string

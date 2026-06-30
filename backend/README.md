@@ -51,6 +51,8 @@ All settings are environment variables prefixed `DRTC_` (see `app/config.py`):
 | `DRTC_PASS_STEP_SEC` | `30` | Coarse propagation step |
 | `DRTC_TLE_REFRESH_SEC` | `1800` | How often to refresh TLEs |
 | `DRTC_REDIS_URL` | unset | When set, use the Redis broker + shared snapshot cache (multi-replica) |
+| `DRTC_HISTORY_DB` | in-memory | SQLite path for replay history (set a file to persist) |
+| `DRTC_HISTORY_INTERVAL` | `20` | Seconds between recorded history frames |
 
 ## Layout
 
@@ -61,7 +63,8 @@ app/
   store.py           in-memory snapshot (source of truth)
   broker.py          pub/sub fan-out (in-memory or Redis)
   cache.py           shared snapshot cache (null or Redis)
-  runtime.py         resolves broker + cache at startup
+  history.py         append-only replay history (SQLite)
+  runtime.py         resolves broker + cache + history at startup
   threat.py          correlation / threat index
   ingest/
     feeds.py         async fetch + normalize per upstream

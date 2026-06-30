@@ -14,6 +14,7 @@ from typing import Any
 from .broker import Broker, InMemoryBroker, make_broker
 from .cache import NullCache, SnapshotCache, make_cache
 from .config import settings
+from .history import HistoryStore, make_history
 
 log = logging.getLogger("drtc.runtime")
 
@@ -22,9 +23,11 @@ class Runtime:
     def __init__(self) -> None:
         self.broker: Broker = InMemoryBroker()
         self.cache: SnapshotCache = NullCache()
+        self.history: HistoryStore = make_history(None)
         self._redis: Any | None = None
 
     async def startup(self) -> None:
+        self.history = make_history(settings.history_db)
         if settings.redis_url:
             import redis.asyncio as aioredis
 
@@ -38,6 +41,7 @@ class Runtime:
 
     async def shutdown(self) -> None:
         await self.broker.aclose()
+        self.history.close()
         if self._redis is not None:
             await self._redis.aclose()
             self._redis = None

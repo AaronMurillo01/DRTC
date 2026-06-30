@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     # Optional Redis pub/sub + cache (in-memory broker used when unset).
     redis_url: str | None = None
 
+    # Event history for replay. In-memory SQLite by default; a path persists it.
+    history_db: str | None = None
+    history_interval: int = 20
+
     @property
     def cors_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

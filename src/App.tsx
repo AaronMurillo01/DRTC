@@ -1,7 +1,9 @@
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { useFeeds } from './hooks/useFeeds'
 import { useLive } from './hooks/useLive'
+import { useHistory } from './hooks/useHistory'
 import { useStore } from './store'
+import ReplayBar from './components/ReplayBar'
 
 // Live-backend mode is on when a gateway URL is configured at build time.
 const LIVE = !!import.meta.env.VITE_DRTC_API
@@ -33,6 +35,7 @@ export default function App() {
   // drives the store and the client pollers stay off.
   useFeeds(!LIVE)
   useLive(LIVE)
+  useHistory()
   const setCommandOpen = useStore((s) => s.setCommandOpen)
   const setHelpOpen = useStore((s) => s.setHelpOpen)
   const togglePause = useStore((s) => s.togglePause)
@@ -121,23 +124,28 @@ export default function App() {
           </ErrorBoundary>
         </div>
 
-        {/* Center — tactical map / globe */}
-        <div className="order-1 xl:order-none relative h-[58vh] min-h-[380px] xl:h-auto xl:min-h-0 panel overflow-hidden cmd-grid">
-          <ErrorBoundary label="MAP ENGINE">
-            <Suspense
-              fallback={
-                <div className="absolute inset-0 flex items-center justify-center font-mono text-[11px] text-cmd-dim animate-flicker">
-                  ░ INITIALIZING {viewMode === 'globe' ? 'GLOBE' : 'MAP'} ENGINE ░
-                </div>
-              }
-            >
-              {viewMode === 'globe' ? <GlobeView /> : <MapView />}
-            </Suspense>
+        {/* Center — tactical map / globe + replay timeline */}
+        <div className="order-1 xl:order-none flex flex-col gap-2.5 min-h-0">
+          <div className="relative h-[58vh] min-h-[380px] xl:h-auto xl:flex-1 xl:min-h-0 panel overflow-hidden cmd-grid">
+            <ErrorBoundary label="MAP ENGINE">
+              <Suspense
+                fallback={
+                  <div className="absolute inset-0 flex items-center justify-center font-mono text-[11px] text-cmd-dim animate-flicker">
+                    ░ INITIALIZING {viewMode === 'globe' ? 'GLOBE' : 'MAP'} ENGINE ░
+                  </div>
+                }
+              >
+                {viewMode === 'globe' ? <GlobeView /> : <MapView />}
+              </Suspense>
+            </ErrorBoundary>
+            <TimeRange />
+            <LayerLegend />
+            <BriefOverlay />
+            <EventDetail />
+          </div>
+          <ErrorBoundary label="REPLAY">
+            <ReplayBar />
           </ErrorBoundary>
-          <TimeRange />
-          <LayerLegend />
-          <BriefOverlay />
-          <EventDetail />
         </div>
 
         {/* Right column — threat + instability + markets */}
