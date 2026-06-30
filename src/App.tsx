@@ -16,7 +16,7 @@ import ConjunctionWatch from './components/ConjunctionWatch'
 import InstabilityPanel from './components/InstabilityPanel'
 import MarketTicker from './components/MarketTicker'
 import NeoPanel from './components/NeoPanel'
-import SourceStatus from './components/SourceStatus'
+import SystemHealth from './components/health/SystemHealth'
 import StatusBar from './components/StatusBar'
 import CommandPalette from './components/CommandPalette'
 import EventDetail from './components/EventDetail'
@@ -120,7 +120,7 @@ export default function App() {
             <IntelFeed />
           </ErrorBoundary>
           <ErrorBoundary label="BIT">
-            <SourceStatus />
+            <SystemHealth />
           </ErrorBoundary>
         </div>
 

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { TrendingDown, TrendingUp, Minus } from 'lucide-react'
 import { CATEGORY_META, useStore } from '../store'
 import type { EventCategory } from '../types'
+import { ThreatHistoryChart } from './charts/ThreatHistoryChart'
 
 const RING_COLOR: Record<number, string> = {
   1: '#7a818c',
@@ -9,25 +10,6 @@ const RING_COLOR: Record<number, string> = {
   3: '#cf9a40',
   4: '#f4642a',
   5: '#e2574a',
-}
-
-function Sparkline({ data, color }: { data: number[]; color: string }) {
-  if (data.length < 2) return null
-  const w = 100
-  const h = 24
-  const max = Math.max(100, ...data)
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * h}`).join(' ')
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-6">
-      <polyline
-        points={pts}
-        fill="none"
-        stroke={color}
-        strokeWidth="1.5"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
-  )
 }
 
 export default function ThreatPanel() {
@@ -124,7 +106,7 @@ export default function ThreatPanel() {
           <span>INDEX HISTORY</span>
           <span>{history.length} pts</span>
         </div>
-        <Sparkline data={history} color={color} />
+        <ThreatHistoryChart data={history} color={color} />
       </div>
     </div>
   )
