@@ -3,11 +3,19 @@ import { useStore } from '../store'
 import { CATEGORY_META } from '../store'
 import { severityColor, timeAgo } from '../utils'
 
+const LIVE_COLOR: Record<string, string> = {
+  online: 'bg-cmd-green',
+  connecting: 'bg-cmd-amber',
+  reconnecting: 'bg-cmd-amber',
+  off: 'bg-cmd-dim',
+}
+
 export default function StatusBar() {
   const events = useStore((s) => s.events)
   const lastTick = useStore((s) => s.lastTick)
   const paused = useStore((s) => s.paused)
   const cursor = useStore((s) => s.cursor)
+  const liveStatus = useStore((s) => s.liveStatus)
 
   const marquee = useMemo(() => {
     const hot = [...events].sort((a, b) => b.severity - a.severity).slice(0, 14)
@@ -42,6 +50,14 @@ export default function StatusBar() {
           <span className="text-cmd-accent">{cursor.mgrs}</span>
           <span className="text-cmd-dim">
             {cursor.lat.toFixed(2)}, {cursor.lng.toFixed(2)}
+          </span>
+        </div>
+      )}
+      {liveStatus !== 'off' && (
+        <div className="hidden sm:flex items-center gap-1.5 px-3 border-l border-cmd-border shrink-0 text-cmd-dim">
+          <span className={`w-1.5 h-1.5 rounded-full ${LIVE_COLOR[liveStatus] ?? 'bg-cmd-dim'}`} />
+          <span className={liveStatus === 'online' ? 'text-cmd-green' : 'text-cmd-amber'}>
+            {liveStatus === 'online' ? 'BACKEND LINK' : liveStatus.toUpperCase()}
           </span>
         </div>
       )}

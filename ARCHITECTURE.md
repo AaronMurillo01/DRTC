@@ -81,6 +81,15 @@ the write path (ingestion) and the read path (the gateway clients talk to).
 | `POST /api/skytrack` | Server-side az/el track for a pass |
 | `WS /ws` | Snapshot on connect, then live deltas |
 
+## Frontend integration
+
+The React app consumes the gateway when `VITE_DRTC_API` is set at build time. It
+opens `/ws`, applies the snapshot, then applies deltas (`events`, `sources`,
+`passes`, `threat`), and re-derives the analytic layers (country risk, threat,
+SITREP) from the streamed events. The client pollers stay off in this mode, and a
+capped-backoff reconnect keeps the link alive. With no URL set the app runs its
+own pollers and orbital engines, so the static deploy is unaffected.
+
 ## Scaling path (next phases)
 
 1. Swap the in-process broker for **Redis pub/sub** and move the snapshot cache

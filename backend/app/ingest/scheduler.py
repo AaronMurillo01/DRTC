@@ -71,15 +71,9 @@ async def _run_feed(spec: FeedSpec, client: httpx.AsyncClient) -> None:
                     }
                 )
             )
-            await broker.publish(
-                {
-                    "type": "events",
-                    "payload": {
-                        "source": spec.id,
-                        "events": [e.model_dump(by_alias=True) for e in events],
-                    },
-                }
-            )
+            # Send the full merged set so the client can replace wholesale.
+            all_events = [e.model_dump(by_alias=True) for e in store.all_events()]
+            await broker.publish({"type": "events", "payload": {"events": all_events}})
             await _publish_threat()
             await broker.publish(
                 {"type": "sources", "payload": _sources_payload()}

@@ -1,6 +1,10 @@
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { useFeeds } from './hooks/useFeeds'
+import { useLive } from './hooks/useLive'
 import { useStore } from './store'
+
+// Live-backend mode is on when a gateway URL is configured at build time.
+const LIVE = !!import.meta.env.VITE_DRTC_API
 import Header from './components/Header'
 import TimeRange from './components/TimeRange'
 import IntelFeed from './components/IntelFeed'
@@ -25,7 +29,10 @@ const GlobeView = lazy(() => import('./components/GlobeView'))
 const MapView = lazy(() => import('./components/MapView'))
 
 export default function App() {
-  useFeeds()
+  // Standalone polling when no backend is configured; otherwise the websocket
+  // drives the store and the client pollers stay off.
+  useFeeds(!LIVE)
+  useLive(LIVE)
   const setCommandOpen = useStore((s) => s.setCommandOpen)
   const setHelpOpen = useStore((s) => s.setHelpOpen)
   const togglePause = useStore((s) => s.togglePause)

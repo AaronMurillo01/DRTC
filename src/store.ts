@@ -19,6 +19,7 @@ import type {
 } from './types'
 import { buildBrief, computeCountryRisk, computeThreat } from './services/threat'
 import { GROUND_STATIONS } from './services/groundstations'
+import type { LiveStatus } from './services/liveClient'
 
 export const CATEGORY_META: Record<EventCategory, { label: string; color: string; short: string }> =
   {
@@ -107,6 +108,8 @@ interface DRTCState {
   issTrail: [number, number][]
   /** sonar ping on new critical alerts */
   audioAlerts: boolean
+  /** live-backend connection state (off when running standalone) */
+  liveStatus: LiveStatus
   /** ground-station network (reference data) */
   groundStations: GroundStation[]
   /** spacecraft being tracked for pass planning + their TLEs */
@@ -143,6 +146,10 @@ interface DRTCState {
   setPasses: (passes: ContactWindow[], positions: SatPosition[]) => void
   setConjunctions: (conjunctions: Conjunction[]) => void
   selectStation: (id: string | null) => void
+  setLiveStatus: (s: LiveStatus) => void
+  setLiveEvents: (events: IntelEvent[]) => void
+  setThreat: (threat: ThreatState) => void
+  mergeSources: (sources: Partial<FeedSource>[]) => void
   dismissAlert: (id: string) => void
   clearAlerts: () => void
 }
@@ -330,6 +337,7 @@ export const useStore = create<DRTCState>((set) => ({
   cursor: null,
   issTrail: [],
   audioAlerts: false,
+  liveStatus: 'off',
   groundStations: GROUND_STATIONS,
   trackedSats: [],
   tleFetchedAt: null,
@@ -432,6 +440,35 @@ export const useStore = create<DRTCState>((set) => ({
   setPasses: (passes, positions) => set({ passes, satPositions: positions }),
   setConjunctions: (conjunctions) => set({ conjunctions }),
   selectStation: (id) => set({ selectedStationId: id }),
+  setLiveStatus: (s) => set({ liveStatus: s }),
+  setLiveEvents: (events) => set({ events: [...events].sort((a, b) => b.timestamp - a.timestamp) }),
+  setThreat: (threat) =>
+    set((s) => ({ threat, threatHistory: [...s.threatHistory, threat.index].slice(-60) })),
+  mergeSources: (incoming) =>
+    set((s) => {
+      const sources = { ...s.sources }
+      for (const patch of incoming) {
+        if (!patch.id) continue
+        const prev = sources[patch.id]
+        sources[patch.id] = {
+          ...(prev ?? {
+            id: patch.id,
+            label: patch.label ?? patch.id,
+            category: patch.category ?? 'orbital',
+            latencyHistory: [],
+            consecutiveFailures: 0,
+            syncs: 0,
+            count: 0,
+            lastSync: null,
+            latencyMs: null,
+            status: 'pending',
+          }),
+          ...patch,
+          latencyHistory: prev?.latencyHistory ?? [],
+        } as FeedSource
+      }
+      return { sources }
+    }),
   dismissAlert: (id) => set((s) => ({ alerts: s.alerts.filter((a) => a.id !== id) })),
   clearAlerts: () => set({ alerts: [] }),
 }))

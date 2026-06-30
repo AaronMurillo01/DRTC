@@ -189,6 +189,12 @@ with FastAPI, httpx, Pydantic, and sgp4, with a clean split between the write pa
 stateless gateway). See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design,
 and [backend/README.md](backend/README.md) to run it.
 
+To connect the two, set `VITE_DRTC_API` to the backend URL at build time (see
+`.env.example`). The frontend then opens a websocket, takes a full snapshot on
+connect, and is driven by live deltas instead of its own pollers, with a BACKEND
+LINK indicator in the status bar and auto-reconnect if the link drops. With no
+URL set the app stays fully standalone, so the static deploy keeps working.
+
 ## Stack
 
 React, TypeScript, Vite, Tailwind, Zustand for state, MapLibre GL for the 2D and

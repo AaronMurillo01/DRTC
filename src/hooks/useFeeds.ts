@@ -95,8 +95,9 @@ const FEEDS: FeedSpec[] = [
 
 const MAX_BACKOFF = 600_000 // 10 min ceiling for a wedged source
 
-export function useFeeds() {
+export function useFeeds(enabled = true) {
   useEffect(() => {
+    if (!enabled) return
     const { setSourceStatus, ingest, recompute } = useStore.getState()
     const timers: number[] = []
     // Circuit breaker: a source that keeps failing is skipped until this time.
@@ -151,5 +152,5 @@ export function useFeeds() {
       disposed = true
       timers.forEach((t) => window.clearInterval(t))
     }
-  }, [])
+  }, [enabled])
 }
