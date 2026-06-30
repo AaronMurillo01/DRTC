@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { create } from 'zustand'
 import type {
   Alert,
+  Conjunction,
   ContactWindow,
   CountryRisk,
   EventCategory,
@@ -114,6 +115,8 @@ interface DRTCState {
   tleFetchedAt: number | null
   /** predicted contact windows over the network, sorted by AOS */
   passes: ContactWindow[]
+  /** screened close approaches between tracked objects (conjunctions) */
+  conjunctions: Conjunction[]
   /** live SGP4 sub-satellite points for the tracked constellation */
   satPositions: SatPosition[]
   /** currently selected ground station (for the map + panel) */
@@ -138,6 +141,7 @@ interface DRTCState {
   toggleAudio: () => void
   setTrackedSats: (sats: TrackedSat[]) => void
   setPasses: (passes: ContactWindow[], positions: SatPosition[]) => void
+  setConjunctions: (conjunctions: Conjunction[]) => void
   selectStation: (id: string | null) => void
   dismissAlert: (id: string) => void
   clearAlerts: () => void
@@ -330,6 +334,7 @@ export const useStore = create<DRTCState>((set) => ({
   trackedSats: [],
   tleFetchedAt: null,
   passes: [],
+  conjunctions: [],
   satPositions: [],
   selectedStationId: null,
 
@@ -425,6 +430,7 @@ export const useStore = create<DRTCState>((set) => ({
   toggleAudio: () => set((s) => ({ audioAlerts: !s.audioAlerts })),
   setTrackedSats: (sats) => set({ trackedSats: sats, tleFetchedAt: Date.now() }),
   setPasses: (passes, positions) => set({ passes, satPositions: positions }),
+  setConjunctions: (conjunctions) => set({ conjunctions }),
   selectStation: (id) => set({ selectedStationId: id }),
   dismissAlert: (id) => set((s) => ({ alerts: s.alerts.filter((a) => a.id !== id) })),
   clearAlerts: () => set({ alerts: [] }),

@@ -13,6 +13,7 @@ import {
   groundStationsFC,
   satellitesFC,
   contactsFC,
+  conjunctionsFC,
 } from './map/sources'
 import { MapToolbar, type MapTool } from './map/MapToolbar'
 import { fetchRadarTemplate, fetchCloudsTemplate } from '../services/radar'
@@ -46,6 +47,7 @@ export default function MapView() {
   const issTrail = useStore((s) => s.issTrail)
   const groundStations = useStore((s) => s.groundStations)
   const passes = useStore((s) => s.passes)
+  const conjunctions = useStore((s) => s.conjunctions)
   const satPositions = useStore((s) => s.satPositions)
   const selectedStationId = useStore((s) => s.selectedStationId)
   const selectStation = useStore((s) => s.selectStation)
@@ -98,8 +100,18 @@ export default function MapView() {
       ;(map.getSource('contacts') as GeoJSONSource)?.setData(
         contactsFC(active0, st.satPositions, st.groundStations),
       )
+      ;(map.getSource('conjunctions') as GeoJSONSource)?.setData(
+        conjunctionsFC(st.conjunctions, st.satPositions),
+      )
       const gndVis = ground ? 'visible' : 'none'
-      for (const id of ['gs-ring', 'gs-pt', 'sat-pt', 'contact-line']) {
+      for (const id of [
+        'gs-ring',
+        'gs-pt',
+        'sat-pt',
+        'contact-line',
+        'conjunction-line',
+        'conjunction-flag',
+      ]) {
         map.setLayoutProperty(id, 'visibility', gndVis)
       }
       applyView(map, st.viewMode)
@@ -402,14 +414,24 @@ export default function MapView() {
     ;(map.getSource('contacts') as GeoJSONSource)?.setData(
       contactsFC(active, satPositions, groundStations),
     )
-  }, [groundStations, passes, satPositions, selectedStationId])
+    ;(map.getSource('conjunctions') as GeoJSONSource)?.setData(
+      conjunctionsFC(conjunctions, satPositions),
+    )
+  }, [groundStations, passes, conjunctions, satPositions, selectedStationId])
 
   // Ground-segment overlay visibility.
   useEffect(() => {
     const map = mapRef.current
     if (!map || !readyRef.current) return
     const vis = ground ? 'visible' : 'none'
-    for (const id of ['gs-ring', 'gs-pt', 'sat-pt', 'contact-line']) {
+    for (const id of [
+      'gs-ring',
+      'gs-pt',
+      'sat-pt',
+      'contact-line',
+      'conjunction-line',
+      'conjunction-flag',
+    ]) {
       if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis)
     }
   }, [ground])

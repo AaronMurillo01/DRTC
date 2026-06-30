@@ -158,6 +158,21 @@ export interface SkySample {
   el: number
 }
 
+/** A screened close approach between two tracked objects (conjunction). */
+export interface Conjunction {
+  id: string
+  aId: number
+  aName: string
+  bId: number
+  bName: string
+  /** epoch ms of closest approach */
+  tca: number
+  missKm: number
+  relSpeedKmS: number
+  /** true when the miss distance is inside the alert threshold */
+  alert: boolean
+}
+
 export type ThreatLevel = 1 | 2 | 3 | 4 | 5
 
 export interface ThreatState {

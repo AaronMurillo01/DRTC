@@ -2,6 +2,7 @@
 import { CATEGORY_META } from '../../store'
 import { greatCircle, haversineKm, subsolarPoint, D2R } from '../../services/geo'
 import type {
+  Conjunction,
   ContactWindow,
   CountryRisk,
   GroundStation,
@@ -112,6 +113,36 @@ export function contactsFC(
         coordinates: greatCircle([st.lng, st.lat], [sat.lng, sat.lat]),
       },
       properties: {},
+    })
+  }
+  return { type: 'FeatureCollection', features }
+}
+
+// Close-approach markers: a line between the two objects' sub-points, plus a
+// flag point at the midpoint. Only alerting conjunctions are drawn, to keep the
+// map readable.
+export function conjunctionsFC(
+  conjunctions: Conjunction[],
+  positions: SatPosition[],
+): GeoJSON.FeatureCollection {
+  const features: GeoJSON.Feature[] = []
+  for (const c of conjunctions) {
+    if (!c.alert) continue
+    const a = positions.find((p) => p.id === c.aId)
+    const b = positions.find((p) => p.id === c.bId)
+    if (!a || !b) continue
+    features.push({
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: greatCircle([a.lng, a.lat], [b.lng, b.lat]),
+      },
+      properties: { kind: 'line' },
+    })
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [(a.lng + b.lng) / 2, (a.lat + b.lat) / 2] },
+      properties: { kind: 'flag', miss: Math.round(c.missKm) },
     })
   }
   return { type: 'FeatureCollection', features }

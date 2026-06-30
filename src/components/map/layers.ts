@@ -13,6 +13,7 @@ export function addDataLayers(map: maplibregl.Map) {
   map.addSource('gstations', { type: 'geojson', data: empty })
   map.addSource('contacts', { type: 'geojson', data: empty })
   map.addSource('satellites', { type: 'geojson', data: empty })
+  map.addSource('conjunctions', { type: 'geojson', data: empty })
 
   map.addLayer({
     id: 'terminator-fill',
@@ -209,6 +210,29 @@ export function addDataLayers(map: maplibregl.Map) {
       'circle-color': '#e2e7ee',
       'circle-stroke-color': '#070707',
       'circle-stroke-width': 1,
+    },
+  })
+
+  // Conjunction (close-approach) alert links between two objects' sub-points.
+  map.addLayer({
+    id: 'conjunction-line',
+    type: 'line',
+    source: 'conjunctions',
+    filter: ['==', ['get', 'kind'], 'line'],
+    layout: { visibility: 'none', 'line-cap': 'round' },
+    paint: { 'line-color': '#e2574a', 'line-width': 1.2, 'line-dasharray': [1, 1.5] },
+  })
+  map.addLayer({
+    id: 'conjunction-flag',
+    type: 'circle',
+    source: 'conjunctions',
+    filter: ['==', ['get', 'kind'], 'flag'],
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-radius': 4,
+      'circle-color': 'rgba(226,87,74,0.18)',
+      'circle-stroke-color': '#e2574a',
+      'circle-stroke-width': 1.2,
     },
   })
 

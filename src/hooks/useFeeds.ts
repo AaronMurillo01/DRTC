@@ -12,6 +12,7 @@ import { fetchWeather } from '../services/weather'
 import { fetchNeos } from '../services/neo'
 import { fetchTLEs } from '../services/tle'
 import { computePasses } from '../services/passes'
+import { screenConjunctions } from '../services/conjunctions'
 import type { IntelEvent } from '../types'
 
 interface FeedSpec {
@@ -81,6 +82,9 @@ const FEEDS: FeedSpec[] = [
         stepSec: 30,
       })
       useStore.getState().setPasses(passes, positions)
+      // Screen the same constellation for close approaches.
+      const conjunctions = screenConjunctions(sats, Date.now(), { horizonHours: 6, stepSec: 60 })
+      useStore.getState().setConjunctions(conjunctions)
       return { latencyMs, count: passes.length }
     },
   },

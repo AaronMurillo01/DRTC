@@ -6,6 +6,7 @@ import TimeRange from './components/TimeRange'
 import IntelFeed from './components/IntelFeed'
 import ThreatPanel from './components/ThreatPanel'
 import GroundSegment from './components/GroundSegment'
+import ConjunctionWatch from './components/ConjunctionWatch'
 import InstabilityPanel from './components/InstabilityPanel'
 import MarketTicker from './components/MarketTicker'
 import NeoPanel from './components/NeoPanel'
@@ -139,6 +140,9 @@ export default function App() {
           </ErrorBoundary>
           <ErrorBoundary label="GROUND SEGMENT">
             <GroundSegment />
+          </ErrorBoundary>
+          <ErrorBoundary label="CONJUNCTIONS">
+            <ConjunctionWatch />
           </ErrorBoundary>
           <ErrorBoundary label="CII">
             <InstabilityPanel />

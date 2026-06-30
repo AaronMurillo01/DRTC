@@ -30,6 +30,11 @@ backend to run. Open it and it starts streaming.
   every upcoming contact window over a worldwide ground station network. The
   schedule reads like a real tasking board: which bird, which station, time to
   acquisition, peak elevation, duration, RF band, and a rough downlink budget.
+- **Conjunction screening.** The same constellation is screened pairwise for
+  close approaches. For every pair it finds the time of closest approach, the
+  miss distance, and the relative speed, and flags anything inside the alert
+  threshold. It is a miniature version of the space-domain-awareness check real
+  operators run before they trust a pass.
 - **Intel stream.** A ranked feed of every event with full text search and a
   minimum severity slider that filter both the list and the map.
 - **SITREP.** A plain language situation summary generated from the current
