@@ -15,6 +15,7 @@ from .schemas import (
     ContactWindowModel,
     Event,
     GroundStationModel,
+    PlanModel,
     SatPositionModel,
     Snapshot,
     Source,
@@ -46,6 +47,7 @@ class Store:
         self.sat_positions: list[SatPositionModel] = []
         self.passes: list[ContactWindowModel] = []
         self.conjunctions: list[ConjunctionModel] = []
+        self.plan: PlanModel | None = None
 
     def register_source(self, src: Source) -> None:
         self.sources[src.id] = src
@@ -69,6 +71,7 @@ class Store:
             sat_positions=self.sat_positions,
             passes=self.passes,
             conjunctions=self.conjunctions,
+            plan=self.plan,
             server_time=now_ms(),
         )
 

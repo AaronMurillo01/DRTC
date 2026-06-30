@@ -60,6 +60,7 @@ the write path (ingestion) and the read path (the gateway clients talk to).
 | `app/ingest/scheduler.py` | One task per feed + the ground-link worker; circuit breakers; publishes deltas |
 | `app/orbital/passes.py` | SGP4 pass prediction (AOS/LOS, peak elevation, Doppler, link budget) |
 | `app/orbital/conjunctions.py` | Pairwise close-approach screening (TCA, miss distance, relative speed) |
+| `app/orbital/planning.py` | Contact scheduling (OR-Tools CP-SAT no-overlap contention model) |
 | `app/orbital/geo.py` | TEME to ECEF to topocentric look angles (the astrodynamics) |
 | `app/store.py` | In-memory snapshot, the single source of truth |
 | `app/broker.py` | Pub/sub fan-out with a Redis-swappable interface |
@@ -96,7 +97,8 @@ own pollers and orbital engines, so the static deploy is unaffected.
    into Redis, so multiple gateway replicas share state.
 2. Persist events to **TimescaleDB / PostGIS** for history, replay, and geo
    queries.
-3. Add a **contact scheduler** that resolves station contention with a constraint
-   solver. (Conjunction screening is already in `app/orbital/conjunctions.py`.)
+3. Persist events to **TimescaleDB / PostGIS** for history, replay and geo
+   queries. (Conjunction screening and the CP-SAT contact scheduler are already
+   in `app/orbital/`.)
 4. Containerize the whole stack (Docker Compose is already here) and add
    Prometheus metrics + Grafana.

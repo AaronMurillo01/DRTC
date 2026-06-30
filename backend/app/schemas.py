@@ -98,6 +98,15 @@ class ConjunctionModel(_Base):
     alert: bool
 
 
+class PlanModel(_Base):
+    scheduled_ids: list[str]
+    requested: int
+    scheduled_count: int
+    dropped_count: int
+    total_volume_mb: float
+    status: str
+
+
 class Snapshot(_Base):
     """Full state sent to a client on connect."""
 
@@ -108,6 +117,7 @@ class Snapshot(_Base):
     sat_positions: list[SatPositionModel]
     passes: list[ContactWindowModel]
     conjunctions: list[ConjunctionModel]
+    plan: PlanModel | None
     server_time: int
 
 

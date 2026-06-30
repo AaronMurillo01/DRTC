@@ -107,6 +107,11 @@ async def conjunctions(alerts_only: bool = False) -> dict:
     return {"conjunctions": [c.model_dump(by_alias=True) for c in items]}
 
 
+@app.get("/api/plan")
+async def plan() -> dict:
+    return {"plan": store.plan.model_dump(by_alias=True) if store.plan else None}
+
+
 @app.get("/api/passes/{pass_id}/skytrack")
 async def pass_skytrack(pass_id: str) -> dict:
     p = next((x for x in store.passes if x.id == pass_id), None)

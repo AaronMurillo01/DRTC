@@ -3,6 +3,7 @@ import { Radio, Satellite, ShieldCheck, X } from 'lucide-react'
 import { useStore } from '../store'
 import { GROUND_OPERATORS } from '../services/groundstations'
 import { skyTrack } from '../services/passes'
+import { planContacts } from '../services/planning'
 import type { ContactWindow, SkySample } from '../types'
 
 function countdown(ms: number): string {
@@ -53,6 +54,10 @@ export default function GroundSegment() {
   }, [])
 
   const station = stations.find((s) => s.id === selectedStationId) ?? null
+
+  // Resolve station/satellite contention across the whole pass list into a
+  // conflict-free plan, then mark which contacts made the cut.
+  const plan = useMemo(() => planContacts(passes), [passes])
 
   const scoped = useMemo(
     () => (station ? passes.filter((p) => p.stationId === station.id) : passes),
@@ -124,6 +129,7 @@ export default function GroundSegment() {
               p={p}
               now={now}
               live
+              scheduled={plan.scheduledIds.has(p.id)}
               selected={p.id === focus?.id}
               onPick={() => setSelectedPassId(p.id)}
             />
@@ -133,8 +139,16 @@ export default function GroundSegment() {
 
       {/* Upcoming schedule */}
       <div className="max-h-64 overflow-y-auto">
-        <div className="px-2 pt-1.5 pb-0.5 font-mono text-[8px] uppercase tracking-[0.2em] text-cmd-dim">
-          Pass Schedule · 12h
+        <div className="flex items-center justify-between px-2 pt-1.5 pb-0.5 font-mono text-[8px] uppercase tracking-[0.2em] text-cmd-dim">
+          <span>Pass Schedule · 12h</span>
+          {plan.scheduledCount > 0 && (
+            <span className="normal-case tracking-normal">
+              <span className="text-cmd-green">{plan.scheduledCount} sched</span>
+              {plan.droppedCount > 0 && (
+                <span className="text-cmd-dim"> · {plan.droppedCount} held</span>
+              )}
+            </span>
+          )}
         </div>
         {acquiring && (
           <div className="px-2 py-4 text-center font-mono text-[10px] text-cmd-dim animate-pulse">
@@ -151,6 +165,7 @@ export default function GroundSegment() {
             key={p.id}
             p={p}
             now={now}
+            scheduled={plan.scheduledIds.has(p.id)}
             selected={p.id === focus?.id}
             onPick={() => setSelectedPassId(p.id)}
           />
@@ -307,12 +322,14 @@ function ContactRow({
   p,
   now,
   live,
+  scheduled,
   selected,
   onPick,
 }: {
   p: ContactWindow
   now: number
   live?: boolean
+  scheduled?: boolean
   selected?: boolean
   onPick: () => void
 }) {
@@ -331,6 +348,16 @@ function ContactRow({
           className={live ? 'text-cmd-green shrink-0' : 'text-cmd-dim shrink-0'}
         />
         <span className="text-[11px] text-cmd-text font-medium truncate flex-1">{p.satName}</span>
+        <span
+          className={`font-mono text-[7px] px-1 py-px rounded-sm shrink-0 border ${
+            scheduled ? 'text-cmd-green border-cmd-green/40' : 'text-cmd-dim border-cmd-border'
+          }`}
+          title={
+            scheduled ? 'Scheduled in the contact plan' : 'Held: station or satellite conflict'
+          }
+        >
+          {scheduled ? 'SCH' : 'HELD'}
+        </span>
         <span
           className={`font-mono text-[10px] shrink-0 ${live ? 'text-cmd-green' : 'text-cmd-accent'}`}
         >

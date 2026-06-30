@@ -35,6 +35,11 @@ backend to run. Open it and it starts streaming.
   miss distance, and the relative speed, and flags anything inside the alert
   threshold. It is a miniature version of the space-domain-awareness check real
   operators run before they trust a pass.
+- **Contact scheduling.** A station antenna can service one contact at a time
+  and a satellite can only talk to one station at once, so overlapping passes
+  conflict. The schedule resolves the contention into a clean plan and marks
+  each pass scheduled or held. The backend solves it optimally with an OR-Tools
+  CP-SAT no-overlap model; the standalone app uses a fast greedy pass.
 - **Intel stream.** A ranked feed of every event with full text search and a
   minimum severity slider that filter both the list and the map.
 - **SITREP.** A plain language situation summary generated from the current

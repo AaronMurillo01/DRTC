@@ -19,9 +19,11 @@ from ..config import settings
 from ..orbital.conjunctions import screen_conjunctions
 from ..orbital.groundstations import GROUND_STATIONS
 from ..orbital.passes import compute_passes
+from ..orbital.planning import plan_contacts
 from ..schemas import (
     ConjunctionModel,
     ContactWindowModel,
+    PlanModel,
     SatPositionModel,
     Source,
 )
@@ -125,6 +127,16 @@ async def _run_groundlink(client: httpx.AsyncClient) -> None:
             # Screen the same constellation for close approaches (also CPU-bound).
             cdms = await asyncio.to_thread(screen_conjunctions, sats, now_ms())
             store.conjunctions = [ConjunctionModel(**c.__dict__) for c in cdms]
+            # Resolve station/satellite contention into a conflict-free contact plan.
+            plan = await asyncio.to_thread(plan_contacts, passes)
+            store.plan = PlanModel(
+                scheduled_ids=sorted(plan.scheduled_ids),
+                requested=plan.requested,
+                scheduled_count=plan.scheduled_count,
+                dropped_count=plan.dropped_count,
+                total_volume_mb=plan.total_volume_mb,
+                status=plan.status,
+            )
             latency = int((time.perf_counter() - started) * 1000)
             src = store.sources["groundlink"]
             store.register_source(
@@ -147,6 +159,7 @@ async def _run_groundlink(client: httpx.AsyncClient) -> None:
                         "passes": [p.model_dump(by_alias=True) for p in store.passes],
                         "satPositions": [p.model_dump(by_alias=True) for p in store.sat_positions],
                         "conjunctions": [c.model_dump(by_alias=True) for c in store.conjunctions],
+                        "plan": store.plan.model_dump(by_alias=True) if store.plan else None,
                     },
                 }
             )
