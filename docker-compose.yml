@@ -1,0 +1,19 @@
+# DRTC full stack. The backend runs standalone with an in-process broker by
+# default. Bring up the `scale` profile to add Redis, the swap target for the
+# broker + cache when running more than one gateway replica.
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      DRTC_CORS_ORIGINS: "*"
+      # DRTC_REDIS_URL: "redis://redis:6379/0"   # enable with the scale profile
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["scale"]
+    ports:
+      - "6379:6379"
+    restart: unless-stopped

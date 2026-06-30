@@ -172,6 +172,18 @@ configure. The only optional setting is `VITE_NASA_KEY`: the NASA feed uses the
 shared `DEMO_KEY` by default, and you can drop in your own free key from
 api.nasa.gov for higher rate limits.
 
+## Backend (optional)
+
+The frontend runs fully standalone, but there is also a Python backend in
+[`backend/`](backend) that turns DRTC into a real distributed system. Instead of
+every browser polling a dozen APIs and running its own orbit propagation, the
+backend polls each feed once for the whole fleet, runs SGP4 pass prediction
+server-side, and fans the result out to all clients over a websocket. It is built
+with FastAPI, httpx, Pydantic, and sgp4, with a clean split between the write path
+(async ingest workers with per-source circuit breakers) and the read path (a
+stateless gateway). See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design,
+and [backend/README.md](backend/README.md) to run it.
+
 ## Stack
 
 React, TypeScript, Vite, Tailwind, Zustand for state, MapLibre GL for the 2D and
@@ -179,6 +191,9 @@ React, TypeScript, Vite, Tailwind, Zustand for state, MapLibre GL for the 2D and
 for SGP4 orbit propagation behind the ground segment. The map and globe engines
 are loaded on demand so the first paint stays light. The build also ships as an
 installable PWA with offline caching of the app shell and basemap.
+
+The backend is Python: FastAPI, httpx, Pydantic v2, and sgp4, with an in-process
+pub/sub broker (Redis-swappable) and a Docker Compose stack.
 
 Tooling: Vitest for unit tests, ESLint and Prettier, and a GitHub Actions CI
 workflow that type checks, lints, tests, and builds on every push.
