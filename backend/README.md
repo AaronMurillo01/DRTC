@@ -22,6 +22,7 @@ Then:
 ```bash
 curl localhost:8000/api/health
 curl localhost:8000/api/snapshot
+curl localhost:8000/metrics          # Prometheus exposition
 # live stream:
 #   websocat ws://localhost:8000/ws
 ```
@@ -64,6 +65,7 @@ app/
   broker.py          pub/sub fan-out (in-memory or Redis)
   cache.py           shared snapshot cache (null or Redis)
   history.py         append-only replay history (SQLite)
+  metrics.py         Prometheus counters / histograms / gauges
   runtime.py         resolves broker + cache + history at startup
   threat.py          correlation / threat index
   ingest/

@@ -14,6 +14,7 @@ import time
 
 import httpx
 
+from .. import metrics
 from ..config import settings
 from ..orbital.conjunctions import screen_conjunctions
 from ..orbital.groundstations import GROUND_STATIONS
@@ -59,6 +60,8 @@ async def _run_feed(spec: FeedSpec, client: httpx.AsyncClient) -> None:
         try:
             events = await spec.fetch(client)
             latency = int((time.perf_counter() - started) * 1000)
+            metrics.FEED_SYNCS.labels(feed=spec.id).inc()
+            metrics.FEED_LATENCY.labels(feed=spec.id).observe(latency / 1000)
             store.set_events(spec.id, events)
             src = store.sources[spec.id]
             store.register_source(
@@ -86,6 +89,7 @@ async def _run_feed(spec: FeedSpec, client: httpx.AsyncClient) -> None:
             raise
         except Exception as exc:  # noqa: BLE001 - feed isolation
             failures += 1
+            metrics.FEED_FAILURES.labels(feed=spec.id).inc()
             src = store.sources[spec.id]
             store.register_source(
                 src.model_copy(
@@ -138,6 +142,7 @@ async def _run_groundlink(client: httpx.AsyncClient) -> None:
                 status=plan.status,
             )
             latency = int((time.perf_counter() - started) * 1000)
+            metrics.GROUNDLINK_COMPUTE.observe(latency / 1000)
             src = store.sources["groundlink"]
             store.register_source(
                 src.model_copy(

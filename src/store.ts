@@ -501,6 +501,9 @@ function prefsOf(s: DRTCState, patch: Partial<DRTCState>): Prefs {
   }
 }
 
+// Stable empty frame list, so the live path never sees a changing reference.
+const EMPTY_FRAMES: ReplayFrame[] = []
+
 // Map + globe share this filtered view (category + severity + time window).
 function filterVisible(
   events: IntelEvent[],
@@ -534,7 +537,9 @@ export function useVisibleEvents(): IntelEvent[] {
   const minSeverity = useStore((s) => s.minSeverity)
   const timeRange = useStore((s) => s.timeRange)
   const replayAt = useStore((s) => s.replayAt)
-  const replayFrames = useStore((s) => s.replayFrames)
+  // While live, hand back a stable reference so recording a frame every few
+  // seconds doesn't re-filter or re-draw the map; only matters while replaying.
+  const replayFrames = useStore((s) => (s.replayAt == null ? EMPTY_FRAMES : s.replayFrames))
   // In replay, swap in the recorded events and anchor the time window to the
   // scrubbed instant so the picture reads as it did then.
   const { source, now } = useMemo(() => {

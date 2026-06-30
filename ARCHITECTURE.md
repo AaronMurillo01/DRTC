@@ -71,6 +71,7 @@ the write path (ingestion) and the read path (the gateway clients talk to).
 | `app/broker.py` | Pub/sub fan-out: in-memory or Redis implementation |
 | `app/cache.py` | Shared snapshot cache (null or Redis) for multi-replica reads |
 | `app/history.py` | Append-only event history (SQLite; Postgres/TimescaleDB-ready) |
+| `app/metrics.py` | Prometheus counters, histograms and gauges |
 | `app/runtime.py` | Resolves broker + cache + history at startup from config |
 | `app/main.py` | FastAPI gateway: REST endpoints + websocket |
 | `app/threat.py` | Correlation engine (heuristic threat index) |
@@ -80,6 +81,7 @@ the write path (ingestion) and the read path (the gateway clients talk to).
 | Endpoint | Purpose |
 | --- | --- |
 | `GET /api/health` | Liveness + source/subscriber counts |
+| `GET /metrics` | Prometheus exposition (ingest counters, latencies, gauges) |
 | `GET /api/snapshot` | Full current state (what a new client gets) |
 | `GET /api/events` | Filter by `category`, `min_severity` |
 | `GET /api/sources` | Feed health (status, latency, failures) |
@@ -101,10 +103,19 @@ SITREP) from the streamed events. The client pollers stay off in this mode, and 
 capped-backoff reconnect keeps the link alive. With no URL set the app runs its
 own pollers and orbital engines, so the static deploy is unaffected.
 
+## Observability
+
+The backend exposes Prometheus metrics at `/metrics`: ingest counters
+(`drtc_feed_syncs_total`, `drtc_feed_failures_total`), latency histograms
+(`drtc_feed_latency_seconds`, `drtc_groundlink_compute_seconds`), and scrape-time
+gauges (`drtc_events`, `drtc_sources_online`, `drtc_ws_subscribers`,
+`drtc_passes`, `drtc_conjunction_alerts`, `drtc_threat_index`). The compose
+`observe` profile wires up Prometheus + Grafana to scrape and visualize them.
+
 ## Scaling path (next phases)
 
 1. Point the history store at **PostgreSQL / TimescaleDB** for durable, long
    retention and geo queries (the SQLite store uses a portable append-only
    schema). The Redis broker + snapshot cache, conjunction screening, the CP-SAT
-   contact scheduler, and event-history replay are already in place.
-2. Add **Prometheus metrics + Grafana** on the backend.
+   contact scheduler, event-history replay, and Prometheus metrics are already in
+   place.

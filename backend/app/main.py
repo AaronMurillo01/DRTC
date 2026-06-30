@@ -12,9 +12,11 @@ import contextlib
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
+from . import metrics
 from .config import settings
 from .ingest.scheduler import scheduler
 from .orbital.passes import TrackedSat, sky_track
@@ -56,6 +58,20 @@ async def health() -> dict:
         "subscribers": runtime.broker.subscriber_count,
         "passes": len(store.passes),
     }
+
+
+@app.get("/metrics")
+async def prometheus_metrics() -> Response:
+    # Refresh point-in-time gauges from the current store at scrape time.
+    metrics.EVENTS.set(len(store.all_events()))
+    metrics.SOURCES_ONLINE.set(
+        sum(1 for s in store.sources.values() if s.status in ("online", "degraded"))
+    )
+    metrics.WS_SUBSCRIBERS.set(runtime.broker.subscriber_count)
+    metrics.PASSES.set(len(store.passes))
+    metrics.CONJUNCTION_ALERTS.set(sum(1 for c in store.conjunctions if c.alert))
+    metrics.THREAT_INDEX.set(store.threat.index)
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.get("/api/snapshot")
